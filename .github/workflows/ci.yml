@@ -34,7 +34,7 @@ jobs:
       - name: Verify Dancer finds working-directory config
         run: |
           set +e
-          timeout --kill-after=2s 5s docker run --rm dancer:m0 >dancer-startup.log 2>&1
+          timeout --kill-after=2s 5s docker run --rm --network none dancer:m0 >dancer-startup.log 2>&1
           rc=$?
           set -e
           cat dancer-startup.log
