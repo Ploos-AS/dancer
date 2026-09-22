@@ -33,4 +33,4 @@
 - [ ] Add configuration validation/preflight before production startup.
 - [x] Document Dancer 4.16 reconnect semantics and container restart recovery.
 - [x] Add dependency/base-image update automation with CI qualification: weekly Dependabot updates are gated by the existing full PR CI.
-- [ ] Add release notes/changelog workflow and define the next stable release gate.
+- [x] Add release notes/changelog workflow and define the next stable release gate.
