@@ -9,7 +9,7 @@ OCI packaging for the legacy **Dancer IRC bot**.
 - Alpine-first build following Ploos-AS OCI policy.
 - Debian slim only as a documented fallback when Alpine/musl is impractical.
 - Non-root runtime.
-- External configuration under `/config`.
+- External configuration under `/data`.
 - Docker/Podman Compose example.
 - CI build, startup/shutdown, Compose-contract, and isolated IRC registration smoke tests.
 - Qualified multi-arch builds for amd64 and arm64.
