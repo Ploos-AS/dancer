@@ -21,7 +21,14 @@ jobs:
           docker compose config | grep -q 'user: 10001:10001'
           docker compose config | grep -q 'read_only: true'
           docker compose config | grep -q 'no-new-privileges: true'
-          docker compose config | grep -Eq 'cap_drop:[[:space:]]*[[:space:]]*-[[:space:]]*ALL'
+          docker compose config > compose.normalized.yml
+          python3 - <<'PY'
+          import yaml
+          with open("compose.normalized.yml") as f:
+              cfg = yaml.safe_load(f)
+          svc = cfg["services"]["dancer"]
+          assert svc["cap_drop"] == ["ALL"]
+          PY
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
