@@ -7,7 +7,8 @@ The CI test is completely isolated from public IRC networks:
 - a dedicated Docker network is created;
 - `server.py` provides a disposable local IRC endpoint on that network;
 - Dancer receives a test-only copy of the pinned upstream example configuration;
-- the server target is rewritten to `irc-test[:6667]`;
+- the server target is rewritten to `irc-test[:6667]`, with test-only `#dancer-ci` channel and `dancer-ci` nick values;
+- CI verifies local DNS/TCP reachability of the fixture before starting Dancer;
 - CI requires both `NICK` and `USER` registration commands and a successful local handshake marker;
 - the client, endpoint, and network are removed after the test.
 
