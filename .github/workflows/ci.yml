@@ -76,7 +76,7 @@ jobs:
           trap cleanup EXIT
           docker run -d --name irc-test --network dancer-m0-test -v "$PWD/tests/irc/server.py:/server.py:ro" python:3-alpine python3 /server.py
           sleep 1
-          docker run --rm --network dancer-m0-test alpine:3.22 sh -ec 'getent hosts irc-test; nc -zvw3 irc-test 6667'
+          docker run --rm --network dancer-m0-test alpine:3.22 getent hosts irc-test
           docker run --rm --network dancer-m0-test dancer:m0 sh -c 'getent hosts irc-test || true' || true
           set +e
           timeout --kill-after=3s 12s docker run --name dancer-m0-test-client --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0 >dancer-irc.log 2>&1
