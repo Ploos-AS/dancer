@@ -41,6 +41,20 @@ jobs:
           docker rm "$id"
       - name: Verify declared stop signal
         run: test "$(docker image inspect dancer:m0 --format '{{.Config.StopSignal}}')" = 'SIGTERM'
+      - name: Verify healthcheck contract
+        run: |
+          test -n "$(docker image inspect dancer:m0 --format '{{json .Config.Healthcheck.Test}}')"
+          id=$(docker run -d --network none dancer:m0)
+          trap 'docker rm -f "$id" >/dev/null 2>&1 || true' EXIT
+          for _ in $(seq 1 15); do
+            status=$(docker inspect "$id" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')
+            echo "health=$status"
+            [ "$status" = healthy ] && exit 0
+            [ "$status" = unhealthy ] && { docker inspect "$id" --format '{{json .State.Health}}'; exit 1; }
+            sleep 2
+          done
+          docker inspect "$id" --format '{{json .State.Health}}'
+          exit 1
       - name: Probe graceful shutdown
         run: |
           id=$(docker run -d --network none dancer:m0)
