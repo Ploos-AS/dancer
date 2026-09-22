@@ -27,8 +27,8 @@
 
 ## M2 — Release hardening and operations
 
-- [ ] Publish the qualified four-architecture image (amd64, arm64, arm/v7, 386).
-- [ ] Add release smoke tests against the published GHCR manifest.
+- [x] Publish the qualified four-architecture image (amd64, arm64, arm/v7, 386) in v0.2.0.
+- [x] Add release smoke tests against the published GHCR manifest; v0.2.0 release workflow passed.
 - [x] Document upgrades, rollback, backup, and restore for /data.
 - [x] Add configuration validation/preflight before production startup: entrypoint requires a readable /data/dancer.config and CI qualifies the missing-config failure contract (exit 64).
 - [x] Document Dancer 4.16 reconnect semantics and container restart recovery.
