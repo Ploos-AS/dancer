@@ -13,7 +13,7 @@
 - [x] Qualify native amd64 build on Alpine/musl in GitHub Actions.
 - [ ] Confirm executable/configuration runtime semantics.
 - [ ] Add real IRC startup/smoke test.
-- [ ] Qualify amd64 and arm64 in CI.
+- [x] Qualify amd64 and arm64 in CI.
 - [ ] Publish first GHCR image only after qualification.
 
 ## M1
