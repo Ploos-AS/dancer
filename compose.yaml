@@ -8,6 +8,7 @@ services:
     image: ${DANCER_IMAGE:-dancer:local}
     restart: unless-stopped
     user: "10001:10001"
+    init: true
     volumes:
       - ./config:/data
     read_only: true
