@@ -27,7 +27,7 @@ docker build -t dancer:local .
 
 ## Configuration
 
-Mount operator configuration at `/config`. Secrets must not be baked into the image. See `config/README.md`.
+Mount operator configuration at `/data` (the image's working directory and Compose bind-mount target). Secrets must not be baked into the image. See `config/README.md`.
 
 ## Compose
 
