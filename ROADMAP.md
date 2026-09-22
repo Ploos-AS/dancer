@@ -29,8 +29,8 @@
 
 - [ ] Publish the qualified four-architecture image (amd64, arm64, arm/v7, 386).
 - [ ] Add release smoke tests against the published GHCR manifest.
-- [ ] Document upgrades, rollback, backup, and restore for /data.
+- [x] Document upgrades, rollback, backup, and restore for /data.
 - [ ] Add configuration validation/preflight before production startup.
-- [ ] Document Dancer 4.16 reconnect semantics and container restart recovery.
+- [x] Document Dancer 4.16 reconnect semantics and container restart recovery.
 - [ ] Add dependency/base-image update automation with CI qualification.
 - [ ] Add release notes/changelog workflow and define the next stable release gate.
