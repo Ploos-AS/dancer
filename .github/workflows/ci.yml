@@ -39,6 +39,19 @@ jobs:
           docker rm "$id"
       - name: Verify declared stop signal
         run: test "$(docker image inspect dancer:m0 --format '{{.Config.StopSignal}}')" = 'SIGTERM'
+      - name: Probe graceful shutdown
+        run: |
+          id=$(docker run -d --network none dancer:m0)
+          sleep 2
+          docker stop -t 3 "$id" >/dev/null
+          rc=$(docker inspect "$id" --format '{{.State.ExitCode}}')
+          echo "Dancer docker-stop exit code: $rc"
+          docker logs "$id"
+          docker rm "$id" >/dev/null
+          case "$rc" in
+            0|137|143) ;;
+            *) echo "Unexpected Dancer stop exit code: $rc" >&2; exit 1 ;;
+          esac
       - name: Verify Dancer finds working-directory config
         run: |
           set +e
