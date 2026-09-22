@@ -30,7 +30,7 @@ jobs:
           tar -tf rootfs.tar | grep -q '^data/dancer.funcs$'
           tar -tf rootfs.tar | grep -q '^data/dancer.explain$'
           docker rm "$id"
-      - name: Probe Dancer startup semantics
+      - name: Verify Dancer finds working-directory config
         run: |
           set +e
           timeout 5s docker run --rm dancer:m0 >dancer-startup.log 2>&1
@@ -38,6 +38,7 @@ jobs:
           set -e
           cat dancer-startup.log
           echo "Dancer startup probe exit code: $rc"
+          ! grep -Fq "./dancer.config not found!" dancer-startup.log
           test "$rc" -ne 125
 
   multiarch:
