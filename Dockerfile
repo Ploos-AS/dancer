@@ -26,8 +26,8 @@ RUN ./configure --prefix=/usr/local \
 
 FROM alpine:${ALPINE_VERSION}
 RUN addgroup -S dancer && adduser -S -D -H -G dancer dancer \
- && mkdir -p /config /data \
- && chown -R dancer:dancer /config /data
+ && mkdir -p /data \
+ && chown -R dancer:dancer /data
 COPY --from=builder --chown=dancer:dancer /out/ /
 USER dancer:dancer
 WORKDIR /data
