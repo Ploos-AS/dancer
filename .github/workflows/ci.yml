@@ -76,6 +76,10 @@ jobs:
           echo "=== Upstream Hello call path ==="
           grep -RniE --include='*.c' --include='*.h' 'Hello\(|Start\(|ConnectServ\(|connected[[:space:]]*=' "$tmp_src"/dancer-4.16/src | head -n 250 || true
           grep -Rnl --include='*.c' 'Hello(' "$tmp_src"/dancer-4.16/src | while read -r file; do grep -n -B35 -A55 'Hello(' "$file"; done
+          echo "=== Upstream Start connect/Hello context ==="
+          sed -n '280,330p' "$tmp_src"/dancer-4.16/src/dancer.c
+          echo "=== Upstream WriteServer implementation ==="
+          grep -Rnl --include='*.c' '^void WriteServer\|^int WriteServer' "$tmp_src"/dancer-4.16/src | while read -r file; do grep -n -B20 -A70 'WriteServer' "$file" | head -n 120; done
           echo "=== Dancer required IRC directives after rewrite ==="
           grep -Ein '^[[:space:]]*#?[[:space:]]*(server|channel|nick)[[:space:]]*=' tests/irc/config/dancer.config || true
           grep -Eq '^[[:space:]]*server[[:space:]]*=[[:space:]]*irc-test:6667([[:space:]]|$)' tests/irc/config/dancer.config
