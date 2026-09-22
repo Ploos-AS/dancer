@@ -69,7 +69,10 @@ jobs:
           curl -fsSL "https://downloads.sourceforge.net/project/dancer/dancer/4.16/dancer-4.16.tar.gz" -o "$tmp_src/dancer.tar.gz"
           echo "b61d754811a8cdb0ee0eb3ea50bae5d257f7eb070d5a94febfe7ba11728c1dca  $tmp_src/dancer.tar.gz" | sha256sum -c -
           tar -xzf "$tmp_src/dancer.tar.gz" -C "$tmp_src"
-          grep -RniE 'Connected to|NICK |USER |EOF from server|connect\(' "$tmp_src"/dancer-4.16/src | head -n 120 || true
+          grep -RniE --include='*.c' --include='*.h' 'Connected to|WriteServer\("NICK|WriteServer\("USER|EOF from server|connect\(' "$tmp_src"/dancer-4.16/src | head -n 200 || true
+          echo "=== Upstream server startup context ==="
+          grep -Rnl --include='*.c' 'Connected to' "$tmp_src"/dancer-4.16/src | while read -r file; do grep -n -B25 -A45 'Connected to' "$file"; done
+          grep -Rnl --include='*.c' 'WriteServer("NICK' "$tmp_src"/dancer-4.16/src | while read -r file; do grep -n -B25 -A45 'WriteServer("NICK' "$file"; done
           echo "=== Dancer required IRC directives after rewrite ==="
           grep -Ein '^[[:space:]]*#?[[:space:]]*(server|channel|nick)[[:space:]]*=' tests/irc/config/dancer.config || true
           grep -Eq '^[[:space:]]*server[[:space:]]*=[[:space:]]*irc-test\[:6667\]([[:space:]]|$)' tests/irc/config/dancer.config
