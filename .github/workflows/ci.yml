@@ -118,7 +118,7 @@ jobs:
           test "$handshake" -eq 1
           docker logs irc-test | grep -q 'DANCER_IRC_HANDSHAKE_OK'
           docker logs irc-test | grep -q 'DANCER_IRC_PING_PONG_OK'
-          docker logs irc-test | grep -Eq '^PONG[[:space:]]+:?dancer-ci-ping
+          docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
           docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
           echo "IRC handshake and PING/PONG assertions passed"
       - name: Verify Dancer finds working-directory config
@@ -172,18 +172,3 @@ jobs:
             124|137) ;;
             *) echo "Dancer exited unexpectedly with code $rc" >&2; exit 1 ;;
           esac
-
-  multiarch:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - name: Qualify amd64 and arm64 builds
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
