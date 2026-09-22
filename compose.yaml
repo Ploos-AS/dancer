@@ -9,8 +9,7 @@ services:
     restart: unless-stopped
     user: dancer
     volumes:
-      - ./config:/config:ro
-      - dancer-data:/data
+      - ./config:/data
     read_only: true
     tmpfs:
       - /tmp
