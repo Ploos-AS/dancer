@@ -27,6 +27,7 @@ jobs:
           with open("compose.normalized.json") as f:
               cfg = json.load(f)
           svc = cfg["services"]["dancer"]
+          print(json.dumps(svc, indent=2, sort_keys=True))
           assert svc["user"] == "10001:10001"
           assert svc["read_only"] is True
           assert svc["security_opt"] == ["no-new-privileges:true"]
