@@ -66,8 +66,8 @@ jobs:
           sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' tests/irc/config/dancer.config
           echo "=== Upstream IRC startup source diagnostics ==="
           tmp_src="$(mktemp -d)"
-          curl -fsSL "$DANCER_URL" -o "$tmp_src/dancer.tar.gz"
-          echo "$DANCER_SHA256  $tmp_src/dancer.tar.gz" | sha256sum -c -
+          curl -fsSL "https://downloads.sourceforge.net/project/dancer/dancer/4.16/dancer-4.16.tar.gz" -o "$tmp_src/dancer.tar.gz"
+          echo "b61d754811a8cdb0ee0eb3ea50bae5d257f7eb070d5a94febfe7ba11728c1dca  $tmp_src/dancer.tar.gz" | sha256sum -c -
           tar -xzf "$tmp_src/dancer.tar.gz" -C "$tmp_src"
           grep -RniE 'Connected to|NICK |USER |EOF from server|connect\(' "$tmp_src"/dancer-4.16/src | head -n 120 || true
           echo "=== Dancer required IRC directives after rewrite ==="
