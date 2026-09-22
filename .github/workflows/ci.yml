@@ -30,6 +30,7 @@ jobs:
           grep -Fxq 'data/dancer.users' rootfs.list
           grep -Fxq 'data/dancer.funcs' rootfs.list
           grep -Fxq 'data/dancer.explain' rootfs.list
+          test "$(docker image inspect dancer:m0 --format '{{.Config.User}}')" = 'dancer:dancer'
           docker rm "$id"
       - name: Verify Dancer finds working-directory config
         run: |
