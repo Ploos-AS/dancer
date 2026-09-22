@@ -60,7 +60,7 @@ jobs:
           docker cp "$cid:/usr/local/share/dancer/." tests/irc/config/
           docker rm "$cid" >/dev/null
           test -f tests/irc/config/dancer.config
-          awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = irc-test[:6667]"; done=1 } {print}' tests/irc/config/dancer.config > tests/irc/config/dancer.config.new
+          awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = irc-test:6667"; done=1 } {print}' tests/irc/config/dancer.config > tests/irc/config/dancer.config.new
           mv tests/irc/config/dancer.config.new tests/irc/config/dancer.config
           sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' tests/irc/config/dancer.config
           sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' tests/irc/config/dancer.config
@@ -75,7 +75,7 @@ jobs:
           grep -Rnl --include='*.c' 'WriteServer("NICK' "$tmp_src"/dancer-4.16/src | while read -r file; do grep -n -B25 -A45 'WriteServer("NICK' "$file"; done
           echo "=== Dancer required IRC directives after rewrite ==="
           grep -Ein '^[[:space:]]*#?[[:space:]]*(server|channel|nick)[[:space:]]*=' tests/irc/config/dancer.config || true
-          grep -Eq '^[[:space:]]*server[[:space:]]*=[[:space:]]*irc-test\[:6667\]([[:space:]]|$)' tests/irc/config/dancer.config
+          grep -Eq '^[[:space:]]*server[[:space:]]*=[[:space:]]*irc-test:6667([[:space:]]|$)' tests/irc/config/dancer.config
           sudo chown -R 10001:10001 tests/irc/config
           docker network create dancer-m0-test
           cleanup() {
