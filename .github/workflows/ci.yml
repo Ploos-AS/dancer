@@ -16,6 +16,14 @@ jobs:
         run: |
           test -f docs/OCI-POLICY.md
           grep -q "Alpine first" docs/OCI-POLICY.md
+          test -f docs/UPSTREAM-COMPAT.md
+          grep -Fq 'It is not a feature fork.' docs/UPSTREAM-COMPAT.md
+          test "$(grep -Ec "sed -i .* (list\.h|netstuff\.c|netstuff\.h)" Dockerfile)" -eq 5
+          grep -Fq "sed -i 's/##//g' list.h" Dockerfile
+          grep -Fq "sed -i 's/^inline void WriteSocket(/void WriteSocket(/' netstuff.c" Dockerfile
+          grep -Fq "sed -i 's/^inline void WriteSocket(/void WriteSocket(/' netstuff.h" Dockerfile
+          grep -Fq "sed -i 's/write(s, msg, StrLength(msg));/send(s, msg, StrLength(msg), 0);/' netstuff.c" Dockerfile
+          grep -Fq "sed -i 's/write(s, \"\\n\", 1);/send(s, \"\\r\\n\", 2, 0);/' netstuff.c" Dockerfile
           cp .env.example .env
           docker compose config >/dev/null
           docker compose config --format json > compose.normalized.json
