@@ -18,5 +18,3 @@ services:
     cap_drop:
       - ALL
 
-volumes:
-  dancer-data:
