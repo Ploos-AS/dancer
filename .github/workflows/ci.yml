@@ -77,7 +77,7 @@ jobs:
           docker run -d --name irc-test --network dancer-m0-test -v "$PWD/tests/irc/server.py:/server.py:ro" python:3-alpine python3 /server.py
           sleep 1
           docker run --rm --network dancer-m0-test alpine:3.22 getent hosts irc-test
-          docker run --rm --network dancer-m0-test dancer:m0 sh -c 'getent hosts irc-test || true' || true
+          docker run --rm --network dancer-m0-test --entrypoint /bin/sh dancer:m0 -c 'getent hosts irc-test || true'
           docker run -d --name dancer-m0-test-client --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0
           handshake=0
           for _ in $(seq 1 15); do
