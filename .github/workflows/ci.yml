@@ -24,11 +24,12 @@ jobs:
         run: |
           id=$(docker create dancer:m0)
           docker export "$id" > rootfs.tar
-          tar -tf rootfs.tar | grep -q '^usr/local/bin/dancer$'
-          tar -tf rootfs.tar | grep -q '^data/dancer.config$'
-          tar -tf rootfs.tar | grep -q '^data/dancer.users$'
-          tar -tf rootfs.tar | grep -q '^data/dancer.funcs$'
-          tar -tf rootfs.tar | grep -q '^data/dancer.explain$'
+          tar -tf rootfs.tar > rootfs.list
+          grep -Fxq 'usr/local/bin/dancer' rootfs.list
+          grep -Fxq 'data/dancer.config' rootfs.list
+          grep -Fxq 'data/dancer.users' rootfs.list
+          grep -Fxq 'data/dancer.funcs' rootfs.list
+          grep -Fxq 'data/dancer.explain' rootfs.list
           docker rm "$id"
       - name: Verify Dancer finds working-directory config
         run: |
