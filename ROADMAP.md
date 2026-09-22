@@ -13,6 +13,7 @@
 - [x] Qualify native amd64 build on Alpine/musl in GitHub Actions.
 - [x] Confirm executable/configuration runtime semantics: Dancer loads `dancer.config` from `/data` and remains running after startup.
 - [x] Qualify deterministic non-root UID/GID 10001:10001 and writable `/data`.
+- [x] Qualify Compose security/runtime contract: read-only rootfs, no-new-privileges, all capabilities dropped, init, restart policy, /data bind mount, and /tmp tmpfs.
 - [ ] Add real IRC startup/smoke test.
 - [x] Qualify amd64 and arm64 in CI.
 - [ ] Publish first GHCR image only after qualification.
