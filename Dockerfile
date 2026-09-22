@@ -31,5 +31,4 @@ RUN addgroup -S dancer && adduser -S -D -H -G dancer dancer \
 COPY --from=builder /out/ /
 USER dancer:dancer
 WORKDIR /data
-VOLUME ["/data"]
 ENTRYPOINT ["/usr/local/bin/dancer"]
