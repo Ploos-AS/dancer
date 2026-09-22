@@ -26,6 +26,10 @@ def main():
                 print(f"IRC_TEST_ACCEPT {addr[0]}:{addr[1]}", flush=True)
                 conn.settimeout(12)
                 conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                # Legacy Dancer waits for initial server traffic before sending
+                # its IRC registration. Real IRC daemons commonly emit an
+                # AUTH/ident notice immediately after accept.
+                conn.sendall(b":irc-test NOTICE AUTH :*** Looking up your hostname...\r\n")
                 buf = b""
                 nick = None
                 user = None
