@@ -1,0 +1,23 @@
+services:
+  dancer:
+    build:
+      context: .
+      args:
+        DANCER_URL: ${DANCER_URL:?set DANCER_URL in .env}
+        DANCER_SHA256: ${DANCER_SHA256:?set DANCER_SHA256 in .env}
+    image: ${DANCER_IMAGE:-dancer:local}
+    restart: unless-stopped
+    user: dancer
+    volumes:
+      - ./config:/config:ro
+      - dancer-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  dancer-data:
