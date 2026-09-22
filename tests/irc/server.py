@@ -61,7 +61,7 @@ def main():
                             print("DANCER_IRC_HANDSHAKE_OK", flush=True)
                             nick = None
                             user = None
-                        if line.upper() == "PONG :DANCER-CI-PING":
+                        if line.upper() in ("PONG :DANCER-CI-PING", "PONG DANCER-CI-PING"):
                             print("DANCER_IRC_PING_PONG_OK", flush=True)
                             return 0
         print("DANCER_IRC_HANDSHAKE_TIMEOUT", file=sys.stderr, flush=True)
