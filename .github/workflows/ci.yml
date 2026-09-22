@@ -78,8 +78,10 @@ jobs:
           timeout --kill-after=3s 12s docker run --name dancer-m0-test-client --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0 >dancer-irc.log 2>&1
           rc=$?
           set -e
-          cat dancer-irc.log
-          docker logs irc-test
+          echo "Dancer integration exit code: $rc"
+          cat dancer-irc.log || true
+          echo "=== IRC fixture logs ==="
+          docker logs irc-test || true
           test "$rc" -eq 124 -o "$rc" -eq 137
           docker logs irc-test | grep -q 'DANCER_IRC_HANDSHAKE_OK'
           docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
