@@ -18,7 +18,8 @@ jobs:
           grep -q "Alpine first" docs/OCI-POLICY.md
           test -f docs/UPSTREAM-COMPAT.md
           grep -Fq 'It is not a feature fork.' docs/UPSTREAM-COMPAT.md
-          test "$(grep -Ec "sed -i .* (list\.h|netstuff\.c|netstuff\.h)" Dockerfile)" -eq 5
+          test "$(grep -c "^[[:space:]]*&& sed -i " Dockerfile)" -eq 5
+          test "$(grep "^[[:space:]]*&& sed -i " Dockerfile | grep -Evc "(list\\.h|netstuff\\.c|netstuff\\.h)")" -eq 0
           grep -Fq "sed -i 's/##//g' list.h" Dockerfile
           grep -Fq "sed -i 's/^inline void WriteSocket(/void WriteSocket(/' netstuff.c" Dockerfile
           grep -Fq "sed -i 's/^inline void WriteSocket(/void WriteSocket(/' netstuff.h" Dockerfile
