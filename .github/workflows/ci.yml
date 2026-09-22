@@ -62,6 +62,8 @@ jobs:
           test -f tests/irc/config/dancer.config
           awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*server[[:space:]]*=/ { $0="server = irc-test[:6667]"; done=1 } {print}' tests/irc/config/dancer.config > tests/irc/config/dancer.config.new
           mv tests/irc/config/dancer.config.new tests/irc/config/dancer.config
+          echo "=== Dancer server directives after rewrite ==="
+          grep -in 'server' tests/irc/config/dancer.config || true
           grep -Eq '^[[:space:]]*server[[:space:]]*=[[:space:]]*irc-test\[:6667\]([[:space:]]|$)' tests/irc/config/dancer.config
           sudo chown -R 10001:10001 tests/irc/config
           docker network create dancer-m0-test
