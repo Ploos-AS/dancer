@@ -78,6 +78,7 @@ jobs:
           docker logs irc-test | grep -q 'DANCER_IRC_HANDSHAKE_OK'
           docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
           docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
+          echo "IRC handshake assertions passed"
       - name: Verify Dancer finds working-directory config
         run: |
           set +e
