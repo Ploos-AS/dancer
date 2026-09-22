@@ -19,7 +19,7 @@ WORKDIR /src/source/src
 RUN ./configure --prefix=/usr/local \
  && sed -i 's/##//g' list.h \
  && make -j"$(getconf _NPROCESSORS_ONLN)" CSPECIAL="-O2 -std=gnu89 -Wno-error=implicit-function-declaration" LDFLAGS="-lm" \
- && mkdir -p /out/usr/local/bin /out/usr/local/share/dancer \
+ && mkdir -p /out/usr/local/bin /out/usr/local/share/dancer /out/data \
  && cp ../dancer /out/usr/local/bin/dancer \
  && cp ../example/dancer.config ../example/dancer.users ../example/dancer.funcs ../example/dancer.explain /out/usr/local/share/dancer/ \
  && cp ../example/dancer.config ../example/dancer.users ../example/dancer.funcs ../example/dancer.explain /out/data/
