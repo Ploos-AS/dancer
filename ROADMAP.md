@@ -10,7 +10,7 @@
 - [x] Pin canonical source URL and SHA-256.
 - [x] Record upstream project license as GPLv2; archive-level verification remains before redistribution.
 - [x] Carry forward the known gnu89 build requirement.
-- [ ] Qualify build on Alpine/musl in GitHub Actions.
+- [x] Qualify native amd64 build on Alpine/musl in GitHub Actions.
 - [ ] Confirm executable/configuration runtime semantics.
 - [ ] Add real IRC startup/smoke test.
 - [ ] Qualify amd64 and arm64 in CI.
