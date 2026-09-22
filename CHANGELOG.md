@@ -9,6 +9,8 @@ version.
 
 ## Unreleased
 
+## v0.2.0 — 2026-09-23
+
 ### Added
 - Four-architecture release target: amd64, arm64, arm/v7, and 386.
 - Published-image manifest and amd64 metadata smoke tests.
