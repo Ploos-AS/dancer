@@ -16,7 +16,7 @@
 - [x] Qualify Compose security/runtime contract: read-only rootfs, no-new-privileges, all capabilities dropped, init, restart policy, /data bind mount, and /tmp tmpfs.
 - [x] Qualify isolated local IRC registration/handshake in CI.
 - [x] Qualify amd64 and arm64 in CI.
-- [ ] Publish first GHCR image only after qualification.
+- [x] Publish first qualified GHCR image (`v0.1.0`) for amd64 and arm64 with SBOM, provenance, and attestation.
 
 ## M1
 
