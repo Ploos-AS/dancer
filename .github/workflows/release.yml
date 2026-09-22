@@ -57,3 +57,21 @@ jobs:
           subject-name: ghcr.io/ploos-as/dancer
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
+      - name: Verify published multi-platform manifest
+        run: |
+          set -e
+          image="ghcr.io/ploos-as/dancer@${{ steps.build.outputs.digest }}"
+          docker buildx imagetools inspect "$image" > manifest.txt
+          cat manifest.txt
+          grep -q 'linux/amd64' manifest.txt
+          grep -q 'linux/arm64' manifest.txt
+          grep -q 'linux/arm/v7' manifest.txt
+          grep -q 'linux/386' manifest.txt
+      - name: Smoke-test published amd64 image
+        run: |
+          set -e
+          image="ghcr.io/ploos-as/dancer@${{ steps.build.outputs.digest }}"
+          docker pull --platform linux/amd64 "$image"
+          test "$(docker image inspect "$image" --format '{{.Config.User}}')" = 'dancer:dancer'
+          test "$(docker image inspect "$image" --format '{{.Config.StopSignal}}')" = 'SIGTERM'
+          docker image inspect "$image" --format '{{json .Config.Healthcheck.Test}}' | grep -q '/proc/1/comm'
