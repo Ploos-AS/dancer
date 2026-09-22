@@ -39,8 +39,14 @@ jobs:
           set -e
           cat dancer-startup.log
           echo "Dancer startup probe exit code: $rc"
-          ! grep -Fq "./dancer.config not found!" dancer-startup.log
-          test "$rc" -eq 124 -o "$rc" -eq 137
+          if grep -Fq "./dancer.config not found!" dancer-startup.log; then
+            echo "Dancer failed to load /data/dancer.config" >&2
+            exit 1
+          fi
+          case "$rc" in
+            124|137) ;;
+            *) echo "Dancer exited unexpectedly with code $rc" >&2; exit 1 ;;
+          esac
 
   multiarch:
     runs-on: ubuntu-latest
