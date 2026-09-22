@@ -37,4 +37,5 @@ COPY --from=builder /out/usr/local/share/dancer/ /usr/local/share/dancer/
 COPY --from=builder --chown=dancer:dancer /out/data/ /data/
 USER dancer:dancer
 WORKDIR /data
+STOPSIGNAL SIGTERM
 ENTRYPOINT ["/usr/local/bin/dancer"]
