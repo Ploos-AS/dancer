@@ -43,7 +43,7 @@ jobs:
         run: test "$(docker image inspect dancer:m0 --format '{{.Config.StopSignal}}')" = 'SIGTERM'
       - name: Verify healthcheck contract
         run: |
-          docker image inspect dancer:m0 --format '{{json .Config.Healthcheck.Test}}' | grep -q HEALTHCHECK
+          docker image inspect dancer:m0 --format '{{json .Config.Healthcheck.Test}}' | grep -q '/proc/1/comm'
           id=$(docker run -d --network none dancer:m0)
           trap 'docker rm -f "$id" >/dev/null 2>&1 || true' EXIT
           for _ in $(seq 1 15); do
