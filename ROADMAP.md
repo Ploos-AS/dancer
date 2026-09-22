@@ -30,7 +30,7 @@
 - [ ] Publish the qualified four-architecture image (amd64, arm64, arm/v7, 386).
 - [ ] Add release smoke tests against the published GHCR manifest.
 - [x] Document upgrades, rollback, backup, and restore for /data.
-- [ ] Add configuration validation/preflight before production startup.
+- [x] Add configuration validation/preflight before production startup: entrypoint requires a readable /data/dancer.config and CI qualifies the missing-config failure contract (exit 64).
 - [x] Document Dancer 4.16 reconnect semantics and container restart recovery.
 - [x] Add dependency/base-image update automation with CI qualification: weekly Dependabot updates are gated by the existing full PR CI.
 - [x] Add release notes/changelog workflow and define the next stable release gate.
