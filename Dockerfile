@@ -13,7 +13,7 @@ RUN curl -fsSL "$DANCER_URL" -o dancer.tar.gz \
  && mkdir source \
  && tar -xzf dancer.tar.gz -C source --strip-components=1
 
-WORKDIR /src/source
+WORKDIR /src/source/src
 # Dancer uses C89-era inline semantics. FreeBSD also qualifies it as gnu89.
 ENV CFLAGS="-O2 -std=gnu89"
 RUN ./configure --prefix=/usr/local \
