@@ -28,7 +28,7 @@ FROM alpine:${ALPINE_VERSION}
 RUN addgroup -S dancer && adduser -S -D -H -G dancer dancer \
  && mkdir -p /config /data \
  && chown -R dancer:dancer /config /data
-COPY --from=builder /out/ /
+COPY --from=builder --chown=dancer:dancer /out/ /
 USER dancer:dancer
 WORKDIR /data
 ENTRYPOINT ["/usr/local/bin/dancer"]
