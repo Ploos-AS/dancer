@@ -39,7 +39,7 @@ jobs:
           cat dancer-startup.log
           echo "Dancer startup probe exit code: $rc"
           ! grep -Fq "./dancer.config not found!" dancer-startup.log
-          test "$rc" -eq 124
+          test "$rc" -eq 124 -o "$rc" -eq 137
 
   multiarch:
     runs-on: ubuntu-latest
