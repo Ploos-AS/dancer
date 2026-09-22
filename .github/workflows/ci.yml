@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate M0 structure
+        run: |
+          test -f Dockerfile
+          test -f compose.yaml
+          test -f .env.example
+          test -f docs/OCI-POLICY.md
+          grep -q "Alpine first" docs/OCI-POLICY.md
+      - name: Validate Compose syntax
+        run: |
+          DANCER_URL=https://example.invalid/dancer.tar.gz \
+          DANCER_SHA256=0000000000000000000000000000000000000000000000000000000000000000 \
+          docker compose config >/dev/null
+
+  # Source-build qualification is enabled once M0 has verified the canonical
+  # upstream archive URL, checksum, license and build procedure. We intentionally
+  # do not download an unverified legacy archive in CI.
