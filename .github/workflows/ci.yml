@@ -51,6 +51,31 @@ jobs:
           docker logs "$id"
           docker rm "$id" >/dev/null
           test "$rc" -eq 0
+      - name: Run isolated IRC handshake
+        run: |
+          set -e
+          rm -rf tests/irc/config
+          mkdir -p tests/irc/config
+          cid=$(docker create dancer:m0)
+          docker cp "$cid:/usr/local/share/dancer/." tests/irc/config/
+          docker rm "$cid" >/dev/null
+          test -f tests/irc/config/dancer.config
+          awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*server[[:space:]]*=/ { $0="server = irc-test:6667"; done=1 } {print}' tests/irc/config/dancer.config > tests/irc/config/dancer.config.new
+          mv tests/irc/config/dancer.config.new tests/irc/config/dancer.config
+          grep -Eq '^[[:space:]]*server[[:space:]]*=[[:space:]]*irc-test:6667([[:space:]]|$)' tests/irc/config/dancer.config
+          sudo chown -R 10001:10001 tests/irc/config
+          docker network create dancer-m0-test
+          trap 'docker rm -f irc-test dancer-m0-test-client >/dev/null 2>&1 || true; docker network rm dancer-m0-test >/dev/null 2>&1 || true' EXIT
+          docker run -d --name irc-test --network dancer-m0-test -v "$PWD/tests/irc/server.py:/server.py:ro" python:3-alpine python3 /server.py
+          sleep 1
+          set +e
+          timeout --kill-after=3s 12s docker run --name dancer-m0-test-client --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0 >dancer-irc.log 2>&1
+          rc=$?
+          set -e
+          cat dancer-irc.log
+          docker logs irc-test
+          test "$rc" -eq 124 -o "$rc" -eq 137
+          docker logs irc-test | grep -q 'DANCER_IRC_HANDSHAKE_OK'
       - name: Verify Dancer finds working-directory config
         run: |
           set +e
