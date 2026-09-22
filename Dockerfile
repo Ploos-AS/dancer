@@ -30,7 +30,8 @@ ARG DANCER_GID=10001
 RUN addgroup -S -g "${DANCER_GID}" dancer \
  && adduser -S -D -H -u "${DANCER_UID}" -G dancer dancer \
  && mkdir -p /data \
- && chown -R dancer:dancer /data
+ && chown -R dancer:dancer /data \
+ && chmod 0755 /data
 COPY --from=builder /out/usr/local/bin/ /usr/local/bin/
 COPY --from=builder /out/usr/local/share/dancer/ /usr/local/share/dancer/
 COPY --from=builder --chown=dancer:dancer /out/data/ /data/
