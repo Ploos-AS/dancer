@@ -19,7 +19,7 @@ jobs:
           cp .env.example .env
           docker compose config >/dev/null
           docker compose config --format json > compose.normalized.json
-          python3 -c 'import json; c=json.load(open("compose.normalized.json")); s=c["services"]["dancer"]; print(json.dumps(s, indent=2, sort_keys=True)); assert s["user"] == "10001:10001"; assert s["read_only"] is True; assert s["security_opt"] == ["no-new-privileges:true"]; assert s["cap_drop"] == ["ALL"]; assert s["init"] is True; assert s["restart"] == "unless-stopped"; assert len(s["volumes"]) == 1 and s["volumes"][0]["target"] == "/data" and s["volumes"][0]["type"] == "bind"; assert s["tmpfs"] == ["/tmp"]'
+          python3 -c 'import json; c=json.load(open("compose.normalized.json")); s=c["services"]["dancer"]; assert s["user"] == "10001:10001"; assert s["read_only"] is True; assert s["security_opt"] == ["no-new-privileges:true"]; assert s["cap_drop"] == ["ALL"]; assert s["init"] is True; assert s["restart"] == "unless-stopped"; assert len(s["volumes"]) == 1 and s["volumes"][0]["target"] == "/data" and s["volumes"][0]["type"] == "bind"; assert s["tmpfs"] == ["/tmp"]'
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
