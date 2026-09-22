@@ -20,6 +20,8 @@ RUN ./configure --prefix=/usr/local \
  && sed -i 's/##//g' list.h \
  && sed -i 's/^inline void WriteSocket(/void WriteSocket(/' netstuff.c \
  && sed -i 's/^inline void WriteSocket(/void WriteSocket(/' netstuff.h \
+ && sed -i 's/write(s, msg, StrLength(msg));/send(s, msg, StrLength(msg), 0);/' netstuff.c \
+ && sed -i 's/write(s, "\\n", 1);/send(s, "\\r\\n", 2, 0);/' netstuff.c \
  && make -j"$(getconf _NPROCESSORS_ONLN)" CSPECIAL="-O2 -std=gnu89 -Wno-error=implicit-function-declaration" LDFLAGS="-lm" \
  && mkdir -p /out/usr/local/bin /out/usr/local/share/dancer /out/data \
  && cp ../dancer /out/usr/local/bin/dancer \
