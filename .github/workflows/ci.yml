@@ -8,23 +8,34 @@ permissions:
   contents: read
 
 jobs:
-  structure:
+  alpine:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate M0 structure
+      - name: Validate policy and Compose
         run: |
-          test -f Dockerfile
-          test -f compose.yaml
-          test -f .env.example
           test -f docs/OCI-POLICY.md
           grep -q "Alpine first" docs/OCI-POLICY.md
-      - name: Validate Compose syntax
-        run: |
-          DANCER_URL=https://example.invalid/dancer.tar.gz \
-          DANCER_SHA256=0000000000000000000000000000000000000000000000000000000000000000 \
           docker compose config >/dev/null
+      - name: Build Dancer on Alpine
+        run: docker build --progress=plain -t dancer:m0 .
+      - name: Verify installed binary
+        run: |
+          id=$(docker create dancer:m0)
+          docker export "$id" | tar -tf - | grep -q '^usr/local/bin/dancer$'
+          docker rm "$id"
 
-  # Source-build qualification is enabled once M0 has verified the canonical
-  # upstream archive URL, checksum, license and build procedure. We intentionally
-  # do not download an unverified legacy archive in CI.
+  multiarch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Qualify amd64 and arm64 builds
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
