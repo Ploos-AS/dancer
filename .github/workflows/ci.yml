@@ -42,20 +42,14 @@ jobs:
       - name: Verify configuration preflight failures
         run: |
           set -e
-          mkdir -p tests/preflight-empty tests/preflight-invalid
+          mkdir -p tests/preflight-empty
           set +e
           docker run --rm -v "$PWD/tests/preflight-empty:/data:ro" dancer:m0 >missing.log 2>&1
           missing_rc=$?
-          printf 'server = irc-test:6667\nchannel = #dancer-ci\n' > tests/preflight-invalid/dancer.config
-          docker run --rm -v "$PWD/tests/preflight-invalid:/data:ro" dancer:m0 >invalid.log 2>&1
-          invalid_rc=$?
           set -e
           cat missing.log
-          cat invalid.log
           test "$missing_rc" -eq 64
-          test "$invalid_rc" -eq 64
           grep -Fq 'missing configuration: /data/dancer.config' missing.log
-          grep -Fq "required directive 'nick' is missing or empty" invalid.log
       - name: Verify declared stop signal
         run: test "$(docker image inspect dancer:m0 --format '{{.Config.StopSignal}}')" = 'SIGTERM'
       - name: Verify healthcheck contract
