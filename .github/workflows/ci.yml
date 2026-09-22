@@ -70,9 +70,9 @@ jobs:
             docker network rm dancer-m0-test >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
+          set +e
           docker run -d --name irc-test --network dancer-m0-test -v "$PWD/tests/irc/server.py:/server.py:ro" python:3-alpine python3 /server.py
           sleep 1
-          set +e
           timeout --kill-after=3s 12s docker run --name dancer-m0-test-client --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0 >dancer-irc.log 2>&1
           rc=$?
           set -e
@@ -83,9 +83,6 @@ jobs:
           docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
           docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
           echo "IRC handshake assertions passed"
-          trap - EXIT
-          cleanup
-          exit 0
       - name: Verify Dancer finds working-directory config
         run: |
           set +e
