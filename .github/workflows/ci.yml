@@ -34,6 +34,7 @@ jobs:
           test "$(docker run --rm --entrypoint id dancer:m0 -u)" = '10001'
           test "$(docker run --rm --entrypoint id dancer:m0 -g)" = '10001'
           docker run --rm --entrypoint sh dancer:m0 -c 'touch /data/.write-test && rm /data/.write-test'
+          docker run --rm --entrypoint sh dancer:m0 -c 'test ! -w /usr/local/bin/dancer && test ! -w /usr/local/share/dancer/dancer.config'
           docker rm "$id"
       - name: Verify Dancer finds working-directory config
         run: |
