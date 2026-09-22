@@ -64,6 +64,12 @@ jobs:
           mv tests/irc/config/dancer.config.new tests/irc/config/dancer.config
           sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' tests/irc/config/dancer.config
           sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' tests/irc/config/dancer.config
+          echo "=== Upstream IRC startup source diagnostics ==="
+          tmp_src="$(mktemp -d)"
+          curl -fsSL "$DANCER_URL" -o "$tmp_src/dancer.tar.gz"
+          echo "$DANCER_SHA256  $tmp_src/dancer.tar.gz" | sha256sum -c -
+          tar -xzf "$tmp_src/dancer.tar.gz" -C "$tmp_src"
+          grep -RniE 'Connected to|NICK |USER |EOF from server|connect\(' "$tmp_src"/dancer-4.16/src | head -n 120 || true
           echo "=== Dancer required IRC directives after rewrite ==="
           grep -Ein '^[[:space:]]*#?[[:space:]]*(server|channel|nick)[[:space:]]*=' tests/irc/config/dancer.config || true
           grep -Eq '^[[:space:]]*server[[:space:]]*=[[:space:]]*irc-test\[:6667\]([[:space:]]|$)' tests/irc/config/dancer.config
