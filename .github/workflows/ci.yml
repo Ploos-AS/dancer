@@ -48,10 +48,7 @@ jobs:
           echo "Dancer docker-stop exit code: $rc"
           docker logs "$id"
           docker rm "$id" >/dev/null
-          case "$rc" in
-            0|137|143) ;;
-            *) echo "Unexpected Dancer stop exit code: $rc" >&2; exit 1 ;;
-          esac
+          test "$rc" -eq 0
       - name: Verify Dancer finds working-directory config
         run: |
           set +e
