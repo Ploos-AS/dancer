@@ -76,6 +76,8 @@ jobs:
           docker logs irc-test
           test "$rc" -eq 124 -o "$rc" -eq 137
           docker logs irc-test | grep -q 'DANCER_IRC_HANDSHAKE_OK'
+          docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
+          docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
       - name: Verify Dancer finds working-directory config
         run: |
           set +e
