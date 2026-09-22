@@ -9,7 +9,8 @@ PORT = 6667
 
 def main():
     ready = threading.Event()
-    deadline = time.time() + 20
+    deadline = time.time() + 40
+    connection_no = 0
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as srv:
         srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -22,8 +23,9 @@ def main():
                 conn, addr = srv.accept()
             except socket.timeout:
                 continue
+            connection_no += 1
             with conn:
-                print(f"IRC_TEST_ACCEPT {addr[0]}:{addr[1]}", flush=True)
+                print(f"IRC_TEST_ACCEPT {connection_no} {addr[0]}:{addr[1]}", flush=True)
                 conn.settimeout(12)
                 conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 # Legacy Dancer waits for initial server traffic before sending
@@ -59,20 +61,28 @@ def main():
                             conn.sendall(f"PONG {token}\r\n".encode())
                         if nick and user:
                             conn.sendall(f":irc-test 001 {nick} :Dancer integration test\r\n".encode())
-                            conn.sendall(b"PING :dancer-ci-ping\r\n")
+                            ping_token = f"dancer-ci-ping-{connection_no}"
+                            conn.sendall(f"PING :{ping_token}\r\n".encode())
                             print("DANCER_IRC_HANDSHAKE_OK", flush=True)
                             nick = None
                             user = None
-                        if line.upper() in ("PONG :DANCER-CI-PING", "PONG DANCER-CI-PING"):
+                        if line.upper() in (f"PONG :DANCER-CI-PING-{connection_no}", f"PONG DANCER-CI-PING-{connection_no}"):
                             pong_ok = True
                             print("DANCER_IRC_PING_PONG_OK", flush=True)
                         if parts and parts[0].upper() == "JOIN" and len(parts) >= 2 and parts[1].rstrip().lower() == "#dancer-ci":
                             join_ok = True
                             print("DANCER_IRC_JOIN_OK", flush=True)
                         if pong_ok and join_ok:
-                            print("DANCER_IRC_CHANNEL_OK", flush=True)
+                            if connection_no == 1:
+                                print("DANCER_IRC_CHANNEL_OK", flush=True)
+                                print("DANCER_IRC_FORCE_RECONNECT", flush=True)
+                                conn.shutdown(socket.SHUT_RDWR)
+                                break
+                            print("DANCER_IRC_RECONNECT_OK", flush=True)
                             return 0
-        print("DANCER_IRC_HANDSHAKE_TIMEOUT", file=sys.stderr, flush=True)
+                    if pong_ok and join_ok and connection_no == 1:
+                        break
+        print("DANCER_IRC_RECONNECT_TIMEOUT", file=sys.stderr, flush=True)
         return 1
 
 if __name__ == "__main__":
