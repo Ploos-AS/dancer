@@ -11,7 +11,9 @@ WORKDIR /src
 RUN curl -fsSL "$DANCER_URL" -o dancer.tar.gz \
  && echo "$DANCER_SHA256  dancer.tar.gz" | sha256sum -c - \
  && mkdir source \
- && tar -xzf dancer.tar.gz -C source --strip-components=1
+ && tar -xzf dancer.tar.gz -C source --strip-components=1 \
+ && test -f source/COPYING \
+ && grep -Eq 'GNU GENERAL PUBLIC LICENSE|GNU General Public License' source/COPYING
 
 WORKDIR /src/source/src
 # Upstream's generated Makefile owns CSPECIAL; passing CFLAGS alone is not enough.
