@@ -79,6 +79,9 @@ jobs:
           docker run --rm --network dancer-m0-test alpine:3.22 getent hosts irc-test
           docker run --rm --network dancer-m0-test --entrypoint /bin/sh dancer:m0 -c 'getent hosts irc-test || true'
           docker run -d --name dancer-m0-test-client --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0
+          sleep 1
+          echo "=== Dancer runtime process/files ==="
+          docker exec dancer-m0-test-client sh -c 'pwd; id; ps 2>/dev/null || true; ls -la /data; echo "--- dancer.config ---"; cat /data/dancer.config; echo "--- writable probe ---"; touch /data/.ci-write-probe && rm /data/.ci-write-probe' || true
           handshake=0
           for _ in $(seq 1 15); do
             if docker logs irc-test 2>&1 | grep -q 'DANCER_IRC_HANDSHAKE_OK'; then
