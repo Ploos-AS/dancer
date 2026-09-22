@@ -57,7 +57,12 @@ def main():
                             conn.sendall(f"PONG {token}\r\n".encode())
                         if nick and user:
                             conn.sendall(f":irc-test 001 {nick} :Dancer integration test\r\n".encode())
+                            conn.sendall(b"PING :dancer-ci-ping\r\n")
                             print("DANCER_IRC_HANDSHAKE_OK", flush=True)
+                            nick = None
+                            user = None
+                        if line.upper() == "PONG :DANCER-CI-PING":
+                            print("DANCER_IRC_PING_PONG_OK", flush=True)
                             return 0
         print("DANCER_IRC_HANDSHAKE_TIMEOUT", file=sys.stderr, flush=True)
         return 1
