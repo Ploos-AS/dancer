@@ -11,8 +11,8 @@ OCI packaging for the legacy **Dancer IRC bot**.
 - Non-root runtime.
 - External configuration under `/config`.
 - Docker/Podman Compose example.
-- CI build/smoke test.
-- Multi-arch release foundation for amd64 and arm64.
+- CI build, startup/shutdown, Compose-contract, and isolated IRC registration smoke tests.
+- Qualified multi-arch builds for amd64 and arm64.
 - Upstream source and license qualification before a release is published.
 
 ## Base image policy
