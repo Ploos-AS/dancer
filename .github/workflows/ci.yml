@@ -147,6 +147,8 @@ jobs:
           test "$(docker inspect dancer-m0-test-client --format '{{.RestartCount}}')" -ge 1
           docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
           docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
+          sh tests/irc/readiness.sh dancer-m0-test-client irc-test
+          echo "External IRC readiness probe passed"
           echo "IRC registration, PING/PONG, JOIN, and reconnect assertions passed"
       - name: Verify Dancer finds working-directory config
         run: |
