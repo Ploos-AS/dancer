@@ -17,8 +17,8 @@ WORKDIR /src/source/src
 # Upstream's generated Makefile owns CSPECIAL; passing CFLAGS alone is not enough.
 # Keep the legacy compiler mode explicit and local to this old source tree.
 RUN ./configure --prefix=/usr/local \
- && sed -i 's/##//g' list.h \\
- && make -j"$(getconf _NPROCESSORS_ONLN)" CSPECIAL="-O2 -std=gnu89 -Wno-error=implicit-function-declaration" LDFLAGS="-lm" \\
+ && sed -i 's/##//g' list.h \
+ && make -j"$(getconf _NPROCESSORS_ONLN)" CSPECIAL="-O2 -std=gnu89 -Wno-error=implicit-function-declaration" LDFLAGS="-lm" \
  && mkdir -p /out/usr/local/bin /out/usr/local/share/dancer \
  && cp ../dancer /out/usr/local/bin/dancer \
  && cp ../example/dancer.config ../example/dancer.users ../example/dancer.funcs ../example/dancer.explain /out/usr/local/share/dancer/
