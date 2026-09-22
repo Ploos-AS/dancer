@@ -93,7 +93,10 @@ jobs:
           echo "=== Dancer integration logs ==="
           docker logs dancer-m0-test-client || true
           echo "=== Dancer runtime files ==="
-          docker exec dancer-m0-test-client sh -c 'for f in /data/dancer.serv /data/logfile; do echo "--- $f ---"; if [ -f "$f" ]; then cat "$f"; else echo "(missing)"; fi; done' || true
+          for f in dancer.serv logfile; do
+            echo "--- /data/$f ---"
+            if [ -f "tests/irc/config/$f" ]; then cat "tests/irc/config/$f"; else echo "(missing)"; fi
+          done
           echo "=== IRC fixture logs ==="
           docker logs irc-test || true
           docker inspect dancer-m0-test-client --format 'Dancer state: status={{.State.Status}} exit={{.State.ExitCode}}' || true
