@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+# Deployment-neutral readiness contract.
+# A watcher/sidecar writes a timestamp only after it has observed a complete,
+# successful IRC session for Dancer. This probe never modifies upstream Dancer.
+state_file=${DANCER_READY_STATE_FILE:-/run/dancer/ready}
+max_age=${DANCER_READY_MAX_AGE:-120}
+
+[ -r "$state_file" ] || exit 1
+case "$max_age" in
+  ''|*[!0-9]*) exit 2 ;;
+esac
+
+ready_at=$(cat "$state_file")
+case "$ready_at" in
+  ''|*[!0-9]*) exit 1 ;;
+esac
+
+now=$(date +%s)
+age=$((now - ready_at))
+[ "$age" -ge 0 ] || exit 1
+[ "$age" -le "$max_age" ] || exit 1
