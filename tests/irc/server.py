@@ -33,6 +33,8 @@ def main():
                 buf = b""
                 nick = None
                 user = None
+                pong_ok = False
+                join_ok = False
                 while time.time() < deadline:
                     try:
                         chunk = conn.recv(4096)
@@ -62,7 +64,13 @@ def main():
                             nick = None
                             user = None
                         if line.upper() in ("PONG :DANCER-CI-PING", "PONG DANCER-CI-PING"):
+                            pong_ok = True
                             print("DANCER_IRC_PING_PONG_OK", flush=True)
+                        if parts and parts[0].upper() == "JOIN" and len(parts) >= 2 and parts[1].rstrip().lower() == "#dancer-ci":
+                            join_ok = True
+                            print("DANCER_IRC_JOIN_OK", flush=True)
+                        if pong_ok and join_ok:
+                            print("DANCER_IRC_CHANNEL_OK", flush=True)
                             return 0
         print("DANCER_IRC_HANDSHAKE_TIMEOUT", file=sys.stderr, flush=True)
         return 1
