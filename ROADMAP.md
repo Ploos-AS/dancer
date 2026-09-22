@@ -11,7 +11,7 @@
 - [x] Record upstream project license as GPLv2; archive-level verification remains before redistribution.
 - [x] Carry forward the known gnu89 build requirement.
 - [x] Qualify native amd64 build on Alpine/musl in GitHub Actions.
-- [ ] Confirm executable/configuration runtime semantics.
+- [x] Confirm executable/configuration runtime semantics: Dancer loads `dancer.config` from `/data` and remains running after startup.
 - [ ] Add real IRC startup/smoke test.
 - [x] Qualify amd64 and arm64 in CI.
 - [ ] Publish first GHCR image only after qualification.
