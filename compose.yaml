@@ -7,7 +7,7 @@ services:
         DANCER_SHA256: ${DANCER_SHA256:?set DANCER_SHA256 in .env}
     image: ${DANCER_IMAGE:-dancer:local}
     restart: unless-stopped
-    user: dancer
+    user: "10001:10001"
     volumes:
       - ./config:/data
     read_only: true
