@@ -98,7 +98,7 @@ jobs:
           docker exec dancer-m0-test-client sh -c 'pwd; id; ps 2>/dev/null || true; ls -la /data; echo "--- dancer.config ---"; cat /data/dancer.config; echo "--- writable probe ---"; touch /data/.ci-write-probe && rm /data/.ci-write-probe' || true
           handshake=0
           for _ in $(seq 1 15); do
-            if docker logs irc-test 2>&1 | grep -q 'DANCER_IRC_PING_PONG_OK'; then
+            if docker logs irc-test 2>&1 | grep -q 'DANCER_IRC_CHANNEL_OK'; then
               handshake=1
               break
             fi
@@ -118,6 +118,8 @@ jobs:
           test "$handshake" -eq 1
           docker logs irc-test | grep -q 'DANCER_IRC_HANDSHAKE_OK'
           docker logs irc-test | grep -q 'DANCER_IRC_PING_PONG_OK'
+          docker logs irc-test | grep -q 'DANCER_IRC_JOIN_OK'
+          docker logs irc-test | grep -q 'DANCER_IRC_CHANNEL_OK'
           docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
           docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
           echo "IRC handshake and PING/PONG assertions passed"
