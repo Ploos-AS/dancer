@@ -20,7 +20,7 @@
 
 ## M1
 
-- [ ] Harden runtime and health checking.
+- [x] Harden runtime and health checking: native Dancer PID healthcheck qualified in CI.
 - [x] Add SBOM/provenance generation and registry attestation (delivered with `v0.1.0`).
 - [ ] Evaluate arm/v7 and 386.
 - [ ] Extend IRC integration coverage beyond registration (PING/PONG, join/channel behavior, reconnect).
