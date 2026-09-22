@@ -65,7 +65,11 @@ jobs:
           grep -Eq '^[[:space:]]*server[[:space:]]*=[[:space:]]*irc-test\[:6667\]([[:space:]]|$)' tests/irc/config/dancer.config
           sudo chown -R 10001:10001 tests/irc/config
           docker network create dancer-m0-test
-          trap 'docker rm -f irc-test dancer-m0-test-client >/dev/null 2>&1 || true; docker network rm dancer-m0-test >/dev/null 2>&1 || true' EXIT
+          cleanup() {
+            docker rm -f irc-test dancer-m0-test-client >/dev/null 2>&1 || true
+            docker network rm dancer-m0-test >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
           docker run -d --name irc-test --network dancer-m0-test -v "$PWD/tests/irc/server.py:/server.py:ro" python:3-alpine python3 /server.py
           sleep 1
           set +e
@@ -79,6 +83,7 @@ jobs:
           docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
           docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
           echo "IRC handshake assertions passed"
+          exit 0
       - name: Verify Dancer finds working-directory config
         run: |
           set +e
