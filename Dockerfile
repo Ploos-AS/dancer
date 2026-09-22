@@ -44,4 +44,5 @@ COPY --from=builder --chown=dancer:dancer /out/data/ /data/
 USER dancer:dancer
 WORKDIR /data
 STOPSIGNAL SIGTERM
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD test -r /proc/1/comm && test "$(cat /proc/1/comm)" = "dancer" || exit 1
 ENTRYPOINT ["/usr/local/bin/dancer"]
