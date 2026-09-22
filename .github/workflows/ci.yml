@@ -16,6 +16,7 @@ jobs:
         run: |
           test -f docs/OCI-POLICY.md
           grep -q "Alpine first" docs/OCI-POLICY.md
+          cp .env.example .env
           docker compose config >/dev/null
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
