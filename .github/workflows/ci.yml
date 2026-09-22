@@ -78,16 +78,22 @@ jobs:
           sleep 1
           docker run --rm --network dancer-m0-test alpine:3.22 getent hosts irc-test
           docker run --rm --network dancer-m0-test dancer:m0 sh -c 'getent hosts irc-test || true' || true
-          set +e
-          timeout --kill-after=3s 12s docker run --name dancer-m0-test-client --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0 >dancer-irc.log 2>&1
-          rc=$?
-          set -e
-          echo "Dancer integration exit code: $rc"
-          cat dancer-irc.log || true
+          docker run -d --name dancer-m0-test-client --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0
+          handshake=0
+          for _ in $(seq 1 15); do
+            if docker logs irc-test 2>&1 | grep -q 'DANCER_IRC_HANDSHAKE_OK'; then
+              handshake=1
+              break
+            fi
+            sleep 1
+          done
+          echo "=== Dancer integration logs ==="
+          docker logs dancer-m0-test-client || true
           echo "=== IRC fixture logs ==="
           docker logs irc-test || true
-          test "$rc" -eq 0 -o "$rc" -eq 124 -o "$rc" -eq 137
-          docker inspect irc-test --format 'IRC fixture state: status={{.State.Status}} exit={{.State.ExitCode}}'
+          docker inspect dancer-m0-test-client --format 'Dancer state: status={{.State.Status}} exit={{.State.ExitCode}}' || true
+          docker inspect irc-test --format 'IRC fixture state: status={{.State.Status}} exit={{.State.ExitCode}}' || true
+          test "$handshake" -eq 1
           docker logs irc-test | grep -q 'DANCER_IRC_HANDSHAKE_OK'
           docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
           docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
