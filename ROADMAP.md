@@ -8,7 +8,7 @@
 - [x] Add CI structure validation.
 - [x] Identify canonical Dancer 4.16 SourceForge release.
 - [x] Pin canonical source URL and SHA-256.
-- [x] Record upstream project license as GPLv2; archive-level verification remains before redistribution.
+- [x] Verify the pinned Dancer 4.16 archive contains its GNU GPL license (`COPYING`) during every build.
 - [x] Carry forward the known gnu89 build requirement.
 - [x] Qualify native amd64 build on Alpine/musl in GitHub Actions.
 - [x] Confirm executable/configuration runtime semantics: Dancer loads `dancer.config` from `/data` and remains running after startup.
