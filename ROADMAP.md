@@ -34,3 +34,24 @@
 - [x] Document Dancer 4.16 reconnect semantics and container restart recovery.
 - [x] Add dependency/base-image update automation with CI qualification: weekly Dependabot updates are gated by the existing full PR CI.
 - [x] Add release notes/changelog workflow and define the next stable release gate.
+
+
+## M3 — Modern operations and IRC integration
+
+**No-fork policy:** Ploos-AS/dancer packages upstream Dancer; it does not maintain a feature fork. Upstream source modifications are limited to minimal, documented compatibility fixes required to build or operate Dancer on supported platforms. New operational functionality belongs in external tooling, container integration, CI, or sidecars.
+
+- [ ] Document and CI-enforce the no-fork boundary and inventory every upstream compatibility patch.
+- [ ] Add secrets/config overlays without storing IRC credentials in Git.
+- [ ] Add external configuration generation and syntax-aware validation based on documented upstream Dancer 4.16 semantics.
+- [ ] Add connection-aware readiness distinct from the process healthcheck.
+- [ ] Add external observability/Prometheus metrics for uptime, IRC connection state, reconnects, and channel state without modifying Dancer feature code.
+- [ ] Qualify Dancer against a matrix of modern IRC daemons in isolated CI.
+- [ ] Define and qualify a secure TLS transport strategy; prefer an external proxy/sidecar if native Dancer 4.16 TLS is insufficient.
+- [ ] Add a tested configuration deployment/restart procedure.
+- [ ] Add automated /data backup/restore verification.
+- [ ] Add migration tooling for existing Dancer 4.16 installations.
+- [ ] Document M3 deployment profiles suitable for Compose and LeanPi-style appliances.
+
+### M3 release gate
+
+M3 passes when upstream Dancer remains clearly identifiable and reproducible from the pinned 4.16 archive, all compatibility patches are minimal and documented, secrets can be deployed without Git, connection readiness and basic operational metrics are available externally, and the packaged bot is qualified against multiple modern IRCd implementations using the documented secure transport strategy.
