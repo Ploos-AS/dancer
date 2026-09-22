@@ -30,6 +30,9 @@ jobs:
           assert svc["security_opt"] == ["no-new-privileges:true"]
           assert svc["cap_drop"] == ["ALL"]
           assert svc["init"] is True
+          assert svc["restart"] == "unless-stopped"
+          assert svc["volumes"] == ["./config:/data"]
+          assert svc["tmpfs"] == ["/tmp"]
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
