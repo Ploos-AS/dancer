@@ -21,8 +21,8 @@ jobs:
           docker compose config | grep -q 'user: 10001:10001'
           docker compose config | grep -q 'read_only: true'
           docker compose config | grep -q 'no-new-privileges:true'
-          docker compose config | grep -q 'cap_drop:
-        - ALL'
+          docker compose config | grep -q 'cap_drop:'
+          docker compose config | grep -q -- '- ALL'
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
