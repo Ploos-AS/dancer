@@ -25,7 +25,10 @@ RUN ./configure --prefix=/usr/local \
  && cp ../example/dancer.config ../example/dancer.users ../example/dancer.funcs ../example/dancer.explain /out/data/
 
 FROM alpine:${ALPINE_VERSION}
-RUN addgroup -S dancer && adduser -S -D -H -G dancer dancer \
+ARG DANCER_UID=10001
+ARG DANCER_GID=10001
+RUN addgroup -S -g "${DANCER_GID}" dancer \
+ && adduser -S -D -H -u "${DANCER_UID}" -G dancer dancer \
  && mkdir -p /data \
  && chown -R dancer:dancer /data
 COPY --from=builder /out/usr/local/bin/ /usr/local/bin/
