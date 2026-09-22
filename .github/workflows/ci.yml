@@ -27,8 +27,10 @@ jobs:
           with open("compose.normalized.json") as f:
               cfg = json.load(f)
           svc = cfg["services"]["dancer"]
+          assert svc["user"] == "10001:10001"
+          assert svc["read_only"] is True
+          assert svc["security_opt"] == ["no-new-privileges:true"]
           assert svc["cap_drop"] == ["ALL"]
-          PY
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
