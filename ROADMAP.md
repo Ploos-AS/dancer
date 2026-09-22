@@ -6,13 +6,14 @@
 - [x] Add non-root multi-stage OCI skeleton.
 - [x] Add Compose security baseline.
 - [x] Add CI structure validation.
-- [ ] Inspect canonical Dancer 4.16 source archive.
-- [ ] Verify upstream license from archive.
-- [ ] Pin canonical source URL and SHA-256.
-- [ ] Qualify build on Alpine/musl.
-- [ ] Confirm executable path and configuration semantics.
-- [ ] Add real startup/smoke test.
-- [ ] Qualify amd64 and arm64.
+- [x] Identify canonical Dancer 4.16 SourceForge release.
+- [x] Pin canonical source URL and SHA-256.
+- [x] Record upstream project license as GPLv2; archive-level verification remains before redistribution.
+- [x] Carry forward the known gnu89 build requirement.
+- [ ] Qualify build on Alpine/musl in GitHub Actions.
+- [ ] Confirm executable/configuration runtime semantics.
+- [ ] Add real IRC startup/smoke test.
+- [ ] Qualify amd64 and arm64 in CI.
 - [ ] Publish first GHCR image only after qualification.
 
 ## M1
