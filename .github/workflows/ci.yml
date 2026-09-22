@@ -92,7 +92,7 @@ jobs:
           sleep 1
           docker run --rm --network dancer-m0-test alpine:3.22 getent hosts irc-test
           docker run --rm --network dancer-m0-test --entrypoint /bin/sh dancer:m0 -c 'getent hosts irc-test || true'
-          docker run -d --name dancer-m0-test-client --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0
+          docker run -d --name dancer-m0-test-client --restart unless-stopped --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0
           sleep 1
           echo "=== Dancer runtime process/files ==="
           docker exec dancer-m0-test-client sh -c 'pwd; id; ps 2>/dev/null || true; ls -la /data; echo "--- dancer.config ---"; cat /data/dancer.config; echo "--- writable probe ---"; touch /data/.ci-write-probe && rm /data/.ci-write-probe' || true
@@ -123,6 +123,7 @@ jobs:
           docker logs irc-test | grep -q 'DANCER_IRC_RECONNECT_OK'
           test "$(docker logs irc-test | grep -c '^NICK[[:space:]]')" -ge 2
           test "$(docker logs irc-test | grep -c '^USER[[:space:]]')" -ge 2
+          test "$(docker inspect dancer-m0-test-client --format '{{.RestartCount}}')" -ge 1
           docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
           docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
           echo "IRC registration, PING/PONG, JOIN, and reconnect assertions passed"
