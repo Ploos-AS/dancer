@@ -33,13 +33,13 @@ jobs:
       - name: Verify Dancer finds working-directory config
         run: |
           set +e
-          timeout 5s docker run --rm dancer:m0 >dancer-startup.log 2>&1
+          timeout --kill-after=2s 5s docker run --rm dancer:m0 >dancer-startup.log 2>&1
           rc=$?
           set -e
           cat dancer-startup.log
           echo "Dancer startup probe exit code: $rc"
           ! grep -Fq "./dancer.config not found!" dancer-startup.log
-          test "$rc" -ne 125
+          test "$rc" -eq 124
 
   multiarch:
     runs-on: ubuntu-latest
