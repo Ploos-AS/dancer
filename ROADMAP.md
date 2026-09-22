@@ -15,7 +15,6 @@
 - [x] Qualify deterministic non-root UID/GID 10001:10001 and writable `/data`.
 - [x] Qualify Compose security/runtime contract: read-only rootfs, no-new-privileges, all capabilities dropped, init, restart policy, /data bind mount, and /tmp tmpfs.
 - [ ] Qualify isolated local IRC registration/handshake in CI.
-- [ ] Add real IRC startup/smoke test.
 - [x] Qualify amd64 and arm64 in CI.
 - [ ] Publish first GHCR image only after qualification.
 
@@ -24,4 +23,4 @@
 - Harden runtime and health checking.
 - Add SBOM/provenance generation.
 - Evaluate arm/v7 and 386.
-- Add IRC integration test against a disposable test IRC server.
+- Extend IRC integration coverage beyond registration (PING/PONG, join/channel behavior, reconnect).
