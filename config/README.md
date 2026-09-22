@@ -18,4 +18,8 @@ copy/adapt the examples into this directory before starting the service.
 Dancer may write runtime state in its working directory, so the `/data` mount is
 intentionally writable even though the container root filesystem is read-only.
 
+The image uses deterministic UID/GID `10001:10001` for the `dancer` account.
+When using the Compose bind mount, ensure the host-side `./config` directory is
+writable by that identity (or otherwise grants the required write access).
+
 Do not commit passwords, IRC service credentials, or other secrets.
