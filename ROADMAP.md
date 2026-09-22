@@ -24,3 +24,13 @@
 - [x] Add SBOM/provenance generation and registry attestation (delivered with `v0.1.0`).
 - [x] Qualify arm/v7 and 386 builds in CI alongside amd64 and arm64.
 - [x] Extend IRC integration coverage beyond registration: PING/PONG, join/channel behavior, and container-level reconnect/recovery.
+
+## M2 — Release hardening and operations
+
+- [ ] Publish the qualified four-architecture image (amd64, arm64, arm/v7, 386).
+- [ ] Add release smoke tests against the published GHCR manifest.
+- [ ] Document upgrades, rollback, backup, and restore for /data.
+- [ ] Add configuration validation/preflight before production startup.
+- [ ] Document Dancer 4.16 reconnect semantics and container restart recovery.
+- [ ] Add dependency/base-image update automation with CI qualification.
+- [ ] Add release notes/changelog workflow and define the next stable release gate.
