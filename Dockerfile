@@ -18,6 +18,8 @@ WORKDIR /src/source/src
 # Keep the legacy compiler mode explicit and local to this old source tree.
 RUN ./configure --prefix=/usr/local \
  && sed -i 's/##//g' list.h \
+ && sed -i 's/^inline void WriteSocket(/void WriteSocket(/' netstuff.c \
+ && sed -i 's/^inline void WriteSocket(/void WriteSocket(/' netstuff.h \
  && make -j"$(getconf _NPROCESSORS_ONLN)" CSPECIAL="-O2 -std=gnu89 -Wno-error=implicit-function-declaration" LDFLAGS="-lm" \
  && mkdir -p /out/usr/local/bin /out/usr/local/share/dancer /out/data \
  && cp ../dancer /out/usr/local/bin/dancer \
