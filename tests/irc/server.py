@@ -23,7 +23,8 @@ def main():
             except socket.timeout:
                 continue
             with conn:
-                conn.settimeout(5)
+                print(f"IRC_TEST_ACCEPT {addr[0]}:{addr[1]}", flush=True)
+                conn.settimeout(12)
                 conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 buf = b""
                 nick = None
@@ -32,8 +33,10 @@ def main():
                     try:
                         chunk = conn.recv(4096)
                     except socket.timeout:
+                        print("IRC_TEST_READ_TIMEOUT", file=sys.stderr, flush=True)
                         break
                     if not chunk:
+                        print("IRC_TEST_EOF", file=sys.stderr, flush=True)
                         break
                     buf += chunk
                     while b"\r\n" in buf:
