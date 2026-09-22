@@ -21,11 +21,11 @@ jobs:
           docker compose config | grep -q 'user: 10001:10001'
           docker compose config | grep -q 'read_only: true'
           docker compose config | grep -q 'no-new-privileges: true'
-          docker compose config > compose.normalized.yml
+          docker compose config --format json > compose.normalized.json
           python3 - <<'PY'
-          import yaml
-          with open("compose.normalized.yml") as f:
-              cfg = yaml.safe_load(f)
+          import json
+          with open("compose.normalized.json") as f:
+              cfg = json.load(f)
           svc = cfg["services"]["dancer"]
           assert svc["cap_drop"] == ["ALL"]
           PY
