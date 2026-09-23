@@ -10,27 +10,18 @@ cid=$(docker create dancer:config-ci)
 docker cp "$cid:/usr/local/share/dancer/dancer.config" "$work/dancer.config"
 docker rm "$cid" >/dev/null
 
-# Select a real, unmodified upstream config line containing ':' or '='.
-line=$(grep -m1 -E '^[^#[:space:]].*[:=]' "$work/dancer.config" || true)
+# Select a real, active upstream directive whose first token is unique.
+line=$(awk '
+  /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+  { line=$0; sub(/^[[:space:]]+/, "", line); split(line, f, /[[:space:]]+/); key=f[1]; sub(/[:=]$/, "", key); count[key]++; sample[key]=$0 }
+  END { for (key in count) if (count[key] == 1) { print sample[key]; exit } }
+' "$work/dancer.config")
 [ -n "$line" ] || {
-  echo "No overlay-safe line found in pinned upstream dancer.config" >&2
+  echo "No unique active directive found in pinned upstream dancer.config" >&2
   exit 1
 }
-case "$line" in
-  *:*) key=${line%%:*}: ;;
-  *=*) key=${line%%=*}= ;;
-esac
-matches=$(grep -F -c "$key" "$work/dancer.config" || true)
-[ "$matches" -eq 1 ] || {
-  echo "Selected upstream key is not unique: $key ($matches matches)" >&2
-  exit 1
-}
-
-# Change only the value while preserving the upstream delimiter/prefix.
-case "$line" in
-  *:*) replacement="${key} DANCER_CI_OVERLAY_VALUE" ;;
-  *=*) replacement="${key} DANCER_CI_OVERLAY_VALUE" ;;
-esac
+key=$(printf '%s\n' "$line" | awk '{k=$1; sub(/[:=]$/, "", k); print k}')
+replacement="$key DANCER_CI_OVERLAY_VALUE"
 printf '%s\n' "$replacement" > "$work/secret-line"
 
 out=$(DANCER_CONFIG_OVERLAY_FILE="$work/secret-line" tools/dancer-config-overlay "$work/dancer.config" "$work/generated.conf")
