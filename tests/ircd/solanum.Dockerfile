@@ -20,4 +20,4 @@ RUN mkdir -p /var/lib/solanum/etc /var/lib/solanum/logs \
 COPY --chown=solanum:solanum tests/ircd/solanum.conf /var/lib/solanum/etc/ircd.conf
 USER solanum
 WORKDIR /var/lib/solanum
-ENTRYPOINT ["/opt/solanum/bin/solanum", "-foreground", "-configfile", "etc/ircd.conf"]
+ENTRYPOINT ["/opt/solanum/bin/solanum", "-foreground", "-configfile", "/var/lib/solanum/etc/ircd.conf"]
