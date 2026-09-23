@@ -46,6 +46,7 @@ COPY --chmod=0755 tools/dancer-config-overlay /usr/local/bin/dancer-config-overl
 COPY --chmod=0755 tools/dancer-config-validate /usr/local/bin/dancer-config-validate
 COPY --chmod=0755 tools/dancer-config-generate /usr/local/bin/dancer-config-generate
 COPY --chmod=0755 tools/dancer-readiness /usr/local/bin/dancer-readiness
+COPY --chmod=0755 tools/dancer-readiness-watch /usr/local/bin/dancer-readiness-watch
 USER dancer:dancer
 WORKDIR /data
 STOPSIGNAL SIGTERM
