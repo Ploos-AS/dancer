@@ -421,6 +421,10 @@ jobs:
         run: |
           chmod +x tests/irc/readiness-compose.sh
           tests/irc/readiness-compose.sh
+      - name: Qualify Prometheus metrics deployment
+        run: |
+          chmod +x tools/dancer-metrics deploy/readiness/metrics.sh tests/irc/metrics-deploy.sh
+          tests/irc/metrics-deploy.sh
       - name: Qualify external TLS transport
         run: |
           chmod +x tests/tls/qualify.sh
