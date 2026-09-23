@@ -12,6 +12,8 @@ rm -f "$state_file"
 : > "$state_dir/reconnects"
 printf '0\n' > "$state_dir/reconnects"
 printf '0\n' > "$state_dir/channel_up"
+write_atomic_bootstrap() { printf '%s\n' "$2" > "$1"; chmod 0644 "$1"; }
+write_atomic_bootstrap "$state_dir/observer_started_at" "$(date +%s)"
 
 write_atomic() {
   path=$1
