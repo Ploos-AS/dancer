@@ -36,3 +36,14 @@ The metric generator is intentionally a command-line text exporter. A deployment
 ## Trust boundary
 
 The readiness and metric values are only as authoritative as the observer that produces the event stream. CI uses the isolated IRC fixture to qualify the contract. Production deployment profiles must provide an observer with the same semantics before using these values for orchestration or alerting.
+
+
+## Deployment profile
+
+The reference readiness deployment now includes a dedicated `metrics` sidecar. It reads `/run/dancer` state read-only and periodically writes Prometheus text exposition to a separate `dancer-metrics` volume as `dancer.prom`.
+
+This separation is intentional: the metrics process cannot create or alter readiness evidence. Only the observer/watcher owns readiness state. Metrics are derived from that state.
+
+The textfile output is suitable for collection by a Prometheus Node Exporter textfile collector or another component that consumes Prometheus text exposition. The Dancer container itself does not expose an HTTP metrics endpoint and upstream Dancer 4.16 remains unchanged.
+
+CI qualifies both the metric values from representative observer state and the Compose read/write boundaries.
