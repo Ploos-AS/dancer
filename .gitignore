@@ -1,0 +1,9 @@
+# Local secret material
+secrets/
+*.secret
+*.secret.*
+.env
+.env.local
+
+# Generated runtime configuration
+*.generated.conf
