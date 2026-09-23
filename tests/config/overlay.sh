@@ -52,9 +52,9 @@ sudo chown -R 10001:10001 "$work/runtime"
 status=0
 docker run --name dancer-overlay-e2e \
   -v "$work/runtime:/data:ro" \
-  -v "$work/dancer.config:/usr/local/share/dancer/dancer.config:ro" \
   -v "$work/container-overlay:/run/secrets/dancer-config-line:ro" \
   -e DANCER_CONFIG_OVERLAY_FILE=/run/secrets/dancer-config-line \
+  -e DANCER_CONFIG_REFERENCE=/data/dancer.config \
   dancer:config-ci >/tmp/dancer-overlay-e2e.log 2>&1 || status=$?
 docker cp dancer-overlay-e2e:/tmp/dancer.config "$work/generated-container.conf"
 docker rm dancer-overlay-e2e >/dev/null
