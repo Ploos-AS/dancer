@@ -18,7 +18,7 @@ line=$(awk '
 ' "$work/dancer.config")
 if [ -z "$line" ]; then
   line=$(awk '
-    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+    /^[[:space:]]*[#;]/ || /^[[:space:]]*$/ { next }
     { print; exit }
   ' "$work/dancer.config")
 fi
