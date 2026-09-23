@@ -31,6 +31,9 @@ fi
 channel_up=$(read_uint "$state_dir/channel_up" 0)
 [ "$channel_up" -eq 1 ] || channel_up=0
 reconnects=$(read_uint "$state_dir/reconnects" 0)
+started_at=$(read_uint "$state_dir/observer_started_at" "$now")
+uptime=$((now - started_at))
+[ "$uptime" -ge 0 ] || uptime=0
 
 cat <<EOF
 # HELP dancer_irc_ready Whether a recent successful IRC observation exists.
@@ -45,4 +48,7 @@ dancer_irc_channel_up $channel_up
 # HELP dancer_irc_reconnects_total Successful reconnect observations since the watcher started.
 # TYPE dancer_irc_reconnects_total counter
 dancer_irc_reconnects_total $reconnects
+# HELP dancer_observer_uptime_seconds Seconds since the external IRC observer state watcher started.
+# TYPE dancer_observer_uptime_seconds gauge
+dancer_observer_uptime_seconds $uptime
 EOF
