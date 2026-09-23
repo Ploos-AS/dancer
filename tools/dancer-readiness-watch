@@ -9,7 +9,6 @@ disconnect_marker=${DANCER_DISCONNECT_MARKER:-DANCER_IRC_FORCE_RECONNECT}
 
 mkdir -p "$state_dir"
 rm -f "$state_file"
-: > "$state_dir/reconnects"
 printf '0\n' > "$state_dir/reconnects"
 printf '0\n' > "$state_dir/channel_up"
 write_atomic_bootstrap() { printf '%s\n' "$2" > "$1"; chmod 0644 "$1"; }
@@ -28,6 +27,7 @@ while IFS= read -r line; do
   case "$line" in
     *"$disconnect_marker"*)
       write_atomic "$state_dir/channel_up" 0
+      rm -f "$state_file"
       ;;
   esac
   case "$line" in
@@ -44,3 +44,7 @@ while IFS= read -r line; do
       ;;
   esac
 done
+
+# EOF means the observer can no longer prove current IRC readiness.
+write_atomic "$state_dir/channel_up" 0
+rm -f "$state_file"
