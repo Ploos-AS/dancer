@@ -10,6 +10,10 @@ cid=$(docker create dancer:config-ci)
 docker cp "$cid:/usr/local/share/dancer/dancer.config" "$work/dancer.config"
 docker rm "$cid" >/dev/null
 
+echo "Pinned upstream dancer.config diagnostic:" >&2
+sed -n '1,40p' "$work/dancer.config" >&2
+echo "----" >&2
+
 # Select a real, active upstream directive whose first token is unique.
 line=$(awk '
   /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
