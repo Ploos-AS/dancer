@@ -50,15 +50,26 @@ jobs:
       - name: Verify healthcheck and graceful shutdown
         run: |
           docker image inspect dancer:m0 --format '{{json .Config.Healthcheck.Test}}' | grep -q '/proc/1/comm'
-          id=$(docker run -d --network none dancer:m0)
-          sleep 2
-          # The stock template intentionally has no active server/channel/nick,
-          # so Dancer may already have exited cleanly before docker stop.
+          # Graceful shutdown is qualified with a config that keeps Dancer alive
+          # long enough to receive SIGTERM; the stock template is intentionally incomplete.
+          mkdir -p tests/shutdown-config
+          cp tests/irc/config/dancer.config tests/shutdown-config/dancer.config 2>/dev/null || {
+            cid=$(docker create dancer:m0)
+            docker cp "$cid:/usr/local/share/dancer/dancer.config" tests/shutdown-config/dancer.config
+            docker rm "$cid" >/dev/null
+          }
+          sed -i -E 's/^[[:space:]]*#server[[:space:]]*=.*/server = 127.0.0.1:65534/' tests/shutdown-config/dancer.config
+          sed -i -E 's/^[[:space:]]*#channel[[:space:]]*=.*/channel = #dancer-ci/' tests/shutdown-config/dancer.config
+          sed -i -E 's/^[[:space:]]*#nick[[:space:]]*=.*/nick = dancer-ci/' tests/shutdown-config/dancer.config
+          sudo chown -R 10001:10001 tests/shutdown-config
+          id=$(docker run -d --network none -v "$PWD/tests/shutdown-config:/data:ro" -e DANCER_CONFIG_REFERENCE=/data/dancer.config dancer:m0)
+          sleep 1
           if [ "$(docker inspect "$id" --format '{{.State.Running}}')" = "true" ]; then
             docker stop -t 3 "$id" >/dev/null
+            test "$(docker inspect "$id" --format '{{.State.ExitCode}}')" -eq 0
           fi
-          test "$(docker inspect "$id" --format '{{.State.ExitCode}}')" -eq 0
           docker rm "$id" >/dev/null
+          sudo rm -rf tests/shutdown-config
       - name: Run isolated IRC handshake
         run: |
           rm -rf tests/irc/config
