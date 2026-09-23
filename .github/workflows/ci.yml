@@ -18,6 +18,10 @@ jobs:
           grep -q "Alpine first" docs/OCI-POLICY.md
           test -f docs/UPSTREAM-COMPAT.md
           grep -Fq 'It is not a feature fork.' docs/UPSTREAM-COMPAT.md
+          test -f docs/OBSERVABILITY.md
+          grep -Fq '## Liveness versus readiness' docs/OBSERVABILITY.md
+          grep -Fq 'dancer_irc_reconnects_total' docs/OBSERVABILITY.md
+          grep -Fq 'dancer_observer_uptime_seconds' docs/OBSERVABILITY.md
           test "$(grep -c "^[[:space:]]*&& sed -i " Dockerfile)" -eq 5
           unexpected="$(grep "^[[:space:]]*&& sed -i " Dockerfile | grep -Ev "(list\\.h|netstuff\\.c|netstuff\\.h)" || true)"
           test -z "$unexpected"
