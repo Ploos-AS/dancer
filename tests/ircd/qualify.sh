@@ -32,6 +32,11 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 
 docker network create "$network" >/dev/null
+# The validator depends on an immutable upstream reference shipped in the image.
+# Assert that contract before creating any mutable test configuration.
+docker run --rm --entrypoint /bin/sh "$image" -c \
+  'test -r /usr/local/share/dancer/dancer.config && grep -Eq "[:=]" /usr/local/share/dancer/dancer.config'
+
 mkdir -p "$config_dir"
 cid=$(docker create "$image")
 docker cp "$cid:/usr/local/share/dancer/." "$config_dir/"
