@@ -75,8 +75,7 @@ jobs:
           grep -Fxq 'dancer_irc_ready 1' metrics.txt
           grep -Fxq 'dancer_irc_channel_up 1' metrics.txt
           grep -Fxq 'dancer_irc_reconnects_total 2' metrics.txt
-          grep -Eq '^dancer_observer_uptime_seconds [0-9]+
-      - name: Build Dancer on Alpine
+          grep -Eq '^dancer_observer_uptime_seconds [0-9]+      - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
         run: |
@@ -215,21 +214,6 @@ jobs:
             124|137) ;;
             *) echo "Dancer exited unexpectedly with code $rc" >&2; exit 1 ;;
           esac
-
-  multiarch:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - name: Qualify amd64 and arm64 builds
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
  metrics.txt
           uptime=$(awk '$1 == "dancer_observer_uptime_seconds" {print $2}' metrics.txt)
           test "$uptime" -ge 0
