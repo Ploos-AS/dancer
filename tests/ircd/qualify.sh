@@ -27,7 +27,7 @@ esac
 cleanup() {
   docker rm -f "$client" "$server" >/dev/null 2>&1 || true
   docker network rm "$network" >/dev/null 2>&1 || true
-  rm -rf "$config_dir"
+  sudo rm -rf "$config_dir"
 }
 trap cleanup EXIT HUP INT TERM
 
