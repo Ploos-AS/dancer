@@ -101,11 +101,25 @@ jobs:
           chmod +x tools/dancer-readiness tools/dancer-readiness-watch tools/dancer-metrics
           state="$RUNNER_TEMP/dancer-ready"
           export DANCER_READY_STATE_FILE="$state"
-          printf '%s\n' 'DANCER_IRC_CHANNEL_OK' | tools/dancer-readiness-watch
+          # Keep the watcher input open while assertions run. EOF deliberately
+          # revokes readiness because the observer can no longer prove state.
+          fifo="$RUNNER_TEMP/dancer-ready-events"
+          mkfifo "$fifo"
+          tools/dancer-readiness-watch < "$fifo" &
+          watcher=$!
+          exec 3>"$fifo"
+          printf '%s\n' 'DANCER_IRC_CHANNEL_OK' >&3
+          for _ in $(seq 1 20); do
+            tools/dancer-readiness >/dev/null 2>&1 && break
+            sleep 0.1
+          done
           tools/dancer-readiness
           tools/dancer-metrics > metrics.txt
           grep -Fxq 'dancer_irc_ready 1' metrics.txt
           grep -Fxq 'dancer_irc_channel_up 1' metrics.txt
+          exec 3>&-
+          wait "$watcher"
+          ! tools/dancer-readiness >/dev/null 2>&1
 
 
   config-overlay:
