@@ -410,6 +410,10 @@ jobs:
         run: |
           chmod +x tests/tls/compose-profile.sh
           tests/tls/compose-profile.sh
+      - name: Qualify external IRC readiness observer
+        run: |
+          chmod +x tools/dancer-readiness tools/dancer-readiness-watch tools/dancer-readiness-mark tools/dancer-irc-observer tests/irc/observer.sh
+          tests/irc/observer.sh
       - name: Qualify external TLS transport
         run: |
           chmod +x tests/tls/qualify.sh
