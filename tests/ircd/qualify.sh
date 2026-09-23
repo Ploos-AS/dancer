@@ -34,8 +34,11 @@ trap cleanup EXIT HUP INT TERM
 docker network create "$network" >/dev/null
 # The validator depends on an immutable upstream reference shipped in the image.
 # Assert that contract before creating any mutable test configuration.
-docker run --rm --entrypoint /bin/sh "$image" -c \
-  'test -r /usr/local/share/dancer/dancer.config && test -s /usr/local/share/dancer/dancer.config'
+if ! docker run --rm --entrypoint /bin/sh "$image" -c \
+  'ls -l /usr/local/share/dancer >&2; test -r /usr/local/share/dancer/dancer.config && test -s /usr/local/share/dancer/dancer.config'; then
+  echo "Dancer image is missing the pinned config reference" >&2
+  exit 1
+fi
 
 mkdir -p "$config_dir"
 cid=$(docker create "$image")
@@ -49,6 +52,11 @@ awk -v server="$server" '
   { print }
 ' "$config_dir/dancer.config" > "$config_dir/dancer.config.new"
 mv "$config_dir/dancer.config.new" "$config_dir/dancer.config"
+echo "=== activated Dancer config directives ==="
+grep -E '^[[:space:]]*(server|channel|nick)[[:space:]]*=' "$config_dir/dancer.config" || {
+  echo "failed to activate required Dancer template directives" >&2
+  exit 1
+}
 sudo chown -R 10001:10001 "$config_dir"
 
 case "$target" in
