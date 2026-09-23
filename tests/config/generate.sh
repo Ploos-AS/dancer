@@ -21,17 +21,10 @@ DANCER_CONFIG_REFERENCE="$work/reference.conf" tools/dancer-config-generate "$wo
 cmp "$work/reference.conf" "$work/generated-a.conf"
 cmp "$work/generated-a.conf" "$work/generated-b.conf"
 
-line=$(grep -m1 -E '^[^#[:space:]].*[:=]' "$work/reference.conf" || true)
-[ -n "$line" ] || { echo "No overlay-safe upstream line found" >&2; exit 1; }
-case "$line" in
-  *:*) key=${line%%:*}: ;;
-  *=*) key=${line%%=*}= ;;
-esac
-[ "$(grep -F -c "$key" "$work/reference.conf" || true)" -eq 1 ] || {
-  echo "Selected upstream key is not unique" >&2
-  exit 1
-}
-replacement="${key} DANCER_CI_GENERATED_VALUE"
+line=$(grep -m1 -E '^[[:space:]]*#[[:alnum:]_]+[[:space:]]*=' "$work/reference.conf" || true)
+[ -n "$line" ] || { echo "No upstream template directive found" >&2; exit 1; }
+key=$(printf '%s\n' "$line" | sed -n -E 's/^[[:space:]]*#([[:alnum:]_]+)[[:space:]]*=.*/\1/p')
+replacement="$key = DANCER_CI_GENERATED_VALUE"
 printf '%s\n' "$replacement" > "$work/overlay-1"
 
 DANCER_CONFIG_REFERENCE="$work/reference.conf" DANCER_CONFIG_OVERLAYS="$work/overlay-1" tools/dancer-config-generate "$work/generated-overlay.conf"
