@@ -11,7 +11,7 @@ jobs:
   alpine:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate policy and Compose
         run: |
           test -f docs/OCI-POLICY.md
@@ -141,7 +141,7 @@ jobs:
   config-overlay:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build pinned Dancer image
         run: docker build --progress=plain -t dancer:config-ci .
       - name: Qualify config overlay against upstream example
@@ -166,7 +166,7 @@ jobs:
       matrix:
         ircd: [ergo, inspircd, solanum]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build Dancer
         run: docker build --progress=plain -t dancer:ircd-matrix .
       - name: Build Solanum CI image
@@ -180,7 +180,7 @@ jobs:
   tls-transport:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build Dancer for TLS qualification
         run: docker build --progress=plain -t dancer:tls-ci .
       - name: Validate TLS Compose isolation policy
@@ -212,11 +212,11 @@ jobs:
   multiarch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
+      - uses: actions/checkout@v7
+      - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v3
       - name: Qualify amd64 and arm64 builds
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
