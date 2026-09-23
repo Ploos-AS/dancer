@@ -31,6 +31,7 @@ RUN ./configure --prefix=/usr/local \
  && cp ../example/dancer.config ../example/dancer.users ../example/dancer.funcs ../example/dancer.explain /out/data/
 
 FROM alpine:${ALPINE_VERSION}
+RUN apk add --no-cache netcat-openbsd coreutils
 ARG DANCER_UID=10001
 ARG DANCER_GID=10001
 RUN addgroup -S -g "${DANCER_GID}" dancer \
@@ -48,6 +49,7 @@ COPY --chmod=0755 tools/dancer-config-generate /usr/local/bin/dancer-config-gene
 COPY --chmod=0755 tools/dancer-readiness /usr/local/bin/dancer-readiness
 COPY --chmod=0755 tools/dancer-readiness-watch /usr/local/bin/dancer-readiness-watch
 COPY --chmod=0755 tools/dancer-readiness-mark /usr/local/bin/dancer-readiness-mark
+COPY --chmod=0755 tools/dancer-irc-observer /usr/local/bin/dancer-irc-observer
 USER dancer:dancer
 WORKDIR /data
 STOPSIGNAL SIGTERM
