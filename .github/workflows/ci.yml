@@ -91,11 +91,24 @@ jobs:
             if docker logs irc-test 2>&1 | grep -q 'DANCER_IRC_RECONNECT_OK'; then ok=1; break; fi
             sleep 1
           done
-          test "$ok" -eq 1
-          docker logs irc-test | grep -q 'DANCER_IRC_HANDSHAKE_OK'
-          docker logs irc-test | grep -q 'DANCER_IRC_PING_PONG_OK'
-          docker logs irc-test | grep -q 'DANCER_IRC_JOIN_OK'
-          docker logs irc-test | grep -q 'DANCER_IRC_RECONNECT_OK'
+          if [ "$ok" -ne 1 ]; then
+            echo "IRC fixture did not observe reconnect within timeout" >&2
+            echo "--- IRC fixture log ---" >&2
+            docker logs irc-test >&2 || true
+            echo "--- Dancer client log ---" >&2
+            docker logs dancer-m0-test-client >&2 || true
+            echo "--- Dancer container state ---" >&2
+            docker inspect dancer-m0-test-client --format '{{json .State}}' >&2 || true
+            exit 1
+          fi
+          for marker in DANCER_IRC_HANDSHAKE_OK DANCER_IRC_PING_PONG_OK DANCER_IRC_JOIN_OK DANCER_IRC_RECONNECT_OK; do
+            if ! docker logs irc-test 2>&1 | grep -q "$marker"; then
+              echo "IRC fixture missing required marker: $marker" >&2
+              docker logs irc-test >&2 || true
+              docker logs dancer-m0-test-client >&2 || true
+              exit 1
+            fi
+          done
       - name: Qualify readiness and Prometheus state tooling
         run: |
           chmod +x tools/dancer-readiness tools/dancer-readiness-watch tools/dancer-metrics
