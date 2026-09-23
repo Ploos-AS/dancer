@@ -2,10 +2,20 @@
 set -eu
 
 state_file=${DANCER_READY_STATE_FILE:-/run/dancer/ready}
+state_dir=$(dirname "$state_file")
 max_age=${DANCER_READY_MAX_AGE:-120}
 now=$(date +%s)
 ready=0
 age=-1
+
+read_uint() {
+  file=$1
+  fallback=$2
+  value=$fallback
+  if [ -r "$file" ]; then value=$(cat "$file" 2>/dev/null || printf '%s' "$fallback"); fi
+  case "$value" in ''|*[!0-9]*) value=$fallback ;; esac
+  printf '%s' "$value"
+}
 
 if [ -r "$state_file" ]; then
   ready_at=$(cat "$state_file" 2>/dev/null || true)
@@ -18,6 +28,10 @@ if [ -r "$state_file" ]; then
   esac
 fi
 
+channel_up=$(read_uint "$state_dir/channel_up" 0)
+[ "$channel_up" -eq 1 ] || channel_up=0
+reconnects=$(read_uint "$state_dir/reconnects" 0)
+
 cat <<EOF
 # HELP dancer_irc_ready Whether a recent successful IRC observation exists.
 # TYPE dancer_irc_ready gauge
@@ -25,4 +39,10 @@ dancer_irc_ready $ready
 # HELP dancer_irc_observation_age_seconds Age of the latest successful IRC observation, or -1 if unavailable.
 # TYPE dancer_irc_observation_age_seconds gauge
 dancer_irc_observation_age_seconds $age
+# HELP dancer_irc_channel_up Whether the external observer currently considers the configured channel joined.
+# TYPE dancer_irc_channel_up gauge
+dancer_irc_channel_up $channel_up
+# HELP dancer_irc_reconnects_total Successful reconnect observations since the watcher started.
+# TYPE dancer_irc_reconnects_total counter
+dancer_irc_reconnects_total $reconnects
 EOF
