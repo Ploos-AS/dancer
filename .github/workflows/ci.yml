@@ -30,6 +30,22 @@ jobs:
           docker compose config >/dev/null
           docker compose config --format json > compose.normalized.json
           python3 -c 'import json; c=json.load(open("compose.normalized.json")); s=c["services"]["dancer"]; assert s["user"] == "10001:10001"; assert s["read_only"] is True; assert s["security_opt"] == ["no-new-privileges:true"]; assert s["cap_drop"] == ["ALL"]; assert s["init"] is True; assert s["restart"] == "unless-stopped"; assert len(s["volumes"]) == 1 and s["volumes"][0]["target"] == "/data" and s["volumes"][0]["type"] == "bind"; assert s["tmpfs"] == ["/tmp"]'
+      - name: Qualify deployment-neutral readiness chain
+        run: |
+          set -e
+          chmod +x tools/dancer-readiness tools/dancer-readiness-watch
+          state="$RUNNER_TEMP/dancer-ready"
+          export DANCER_READY_STATE_FILE="$state"
+          export DANCER_READY_MAX_AGE=2
+          test ! -e "$state"
+          if tools/dancer-readiness; then exit 1; fi
+          printf '%s\n' 'noise' 'DANCER_IRC_CHANNEL_OK' | tools/dancer-readiness-watch
+          tools/dancer-readiness
+          printf '%s\n' "$(( $(date +%s) - 10 ))" > "$state"
+          if tools/dancer-readiness; then exit 1; fi
+          printf '%s\n' 'DANCER_IRC_CHANNEL_OK' | tools/dancer-readiness-watch
+          tools/dancer-readiness
+          echo "Deployment-neutral readiness chain passed"
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
