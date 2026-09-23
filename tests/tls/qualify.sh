@@ -87,7 +87,10 @@ sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dance
 sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' "$config_dir/dancer.config"
 sudo chown -R 10001:10001 "$config_dir"
 
-docker run -d --name dancer-tls-client --restart unless-stopped --network "$network" -v "$config_dir:/data" dancer:tls-ci >/dev/null
+docker run -d --name dancer-tls-client --restart unless-stopped --network "$network" \
+  -v "$config_dir:/data" \
+  -e DANCER_CONFIG_REFERENCE=/data/dancer.config \
+  dancer:tls-ci >/dev/null
 for _ in $(seq 1 45); do
   logs=$(docker logs dancer-tls-server 2>&1 || true)
   printf '%s\n' "$logs" | grep -q 'DANCER_IRC_RECONNECT_OK' && break
