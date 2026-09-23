@@ -46,6 +46,25 @@ jobs:
           printf '%s\n' 'DANCER_IRC_CHANNEL_OK' | tools/dancer-readiness-watch
           tools/dancer-readiness
           echo "Deployment-neutral readiness chain passed"
+      - name: Qualify Prometheus readiness metrics
+        run: |
+          set -e
+          chmod +x tools/dancer-metrics
+          state="$RUNNER_TEMP/dancer-metrics-ready"
+          export DANCER_READY_STATE_FILE="$state"
+          export DANCER_READY_MAX_AGE=120
+          rm -f "$state"
+          tools/dancer-metrics > metrics.txt
+          grep -Fxq 'dancer_irc_ready 0' metrics.txt
+          grep -Fxq 'dancer_irc_observation_age_seconds -1' metrics.txt
+          date +%s > "$state"
+          tools/dancer-metrics > metrics.txt
+          grep -Fxq 'dancer_irc_ready 1' metrics.txt
+          printf '%s\n' "$(( $(date +%s) - 300 ))" > "$state"
+          tools/dancer-metrics > metrics.txt
+          grep -Fxq 'dancer_irc_ready 0' metrics.txt
+          grep -Fxq 'dancer_irc_observation_age_seconds 300' metrics.txt
+          echo "Prometheus readiness metrics passed"
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
