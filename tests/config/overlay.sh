@@ -54,3 +54,32 @@ if DANCER_CONFIG_OVERLAY_FILE="$work/unknown" tools/dancer-config-overlay "$work
 fi
 
 echo "Syntax-preserving config overlay qualified against pinned upstream dancer.config"
+
+
+# End-to-end container startup with overlay enabled. Use the exact upstream line
+# as the replacement so semantics remain unchanged while the runtime path is exercised.
+printf '%s\n' "$line" > "$work/container-overlay"
+mkdir -p "$work/runtime"
+cp "$work/dancer.config" "$work/runtime/dancer.config"
+sudo chown -R 10001:10001 "$work/runtime"
+status=0
+docker run --name dancer-overlay-e2e \
+  -v "$work/runtime:/data:ro" \
+  -v "$work/container-overlay:/run/secrets/dancer-config-line:ro" \
+  -e DANCER_CONFIG_OVERLAY_FILE=/run/secrets/dancer-config-line \
+  dancer:config-ci >/tmp/dancer-overlay-e2e.log 2>&1 || status=$?
+docker cp dancer-overlay-e2e:/tmp/dancer.config "$work/generated-container.conf"
+docker rm dancer-overlay-e2e >/dev/null
+cmp "$work/dancer.config" "$work/generated-container.conf"
+mode=$(stat -c '%a' "$work/generated-container.conf")
+case "$mode" in
+  600|400) ;;
+  *) echo "Container-generated config has unsafe mode: $mode" >&2; exit 1 ;;
+esac
+# Dancer may exit cleanly when the example config cannot reach its sample IRC
+# endpoint; this test qualifies overlay generation and entrypoint handoff.
+[ "$status" -eq 0 ] || {
+  cat /tmp/dancer-overlay-e2e.log >&2
+  exit "$status"
+}
+echo "Container entrypoint overlay path qualified"
