@@ -65,6 +65,13 @@ jobs:
           grep -Fxq 'dancer_irc_ready 0' metrics.txt
           grep -Fxq 'dancer_irc_observation_age_seconds 300' metrics.txt
           echo "Prometheus readiness metrics passed"
+          printf '%s\n' 'DANCER_IRC_CHANNEL_OK' 'DANCER_IRC_FORCE_RECONNECT' 'DANCER_IRC_CHANNEL_OK' 'DANCER_IRC_RECONNECT_OK' 'DANCER_IRC_RECONNECT_OK' | DANCER_READY_STATE_FILE="$state" sh tools/dancer-readiness-watch
+          DANCER_READY_STATE_FILE="$state" tools/dancer-metrics > metrics.txt
+          cat metrics.txt
+          grep -Fxq 'dancer_irc_ready 1' metrics.txt
+          grep -Fxq 'dancer_irc_channel_up 1' metrics.txt
+          grep -Fxq 'dancer_irc_reconnects_total 2' metrics.txt
+          echo "Observer state and Prometheus reconnect/channel metrics passed"
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
