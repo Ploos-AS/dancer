@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+
+reference=${DANCER_CONFIG_REFERENCE:-/usr/local/share/dancer/dancer.config}
+output=${1:-./dancer.config}
+overlays=${DANCER_CONFIG_OVERLAYS:-}
+
+fail() { echo "dancer-config-generate: $*" >&2; exit 65; }
+[ -r "$reference" ] || fail "unreadable pinned upstream reference: $reference"
+
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT HUP INT TERM
+cp "$reference" "$tmp"
+
+# Apply zero or more complete-line overlays, one file at a time. The overlay
+# helper only replaces prefixes that already exist exactly once in the source.
+old_ifs=$IFS
+IFS=:
+for overlay in $overlays; do
+  [ -n "$overlay" ] || continue
+  next=$(mktemp)
+  DANCER_CONFIG_OVERLAY_FILE="$overlay" dancer-config-overlay "$tmp" "$next" >/dev/null
+  mv "$next" "$tmp"
+done
+IFS=$old_ifs
+
+DANCER_CONFIG_REFERENCE="$reference" dancer-config-validate "$tmp" >/dev/null
+
+umask 077
+mkdir -p "$(dirname "$output")"
+cat "$tmp" > "$output"
+printf '%s\n' "$output"
