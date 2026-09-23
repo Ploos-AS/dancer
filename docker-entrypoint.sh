@@ -16,4 +16,6 @@ if [ -n "${DANCER_CONFIG_OVERLAY_FILE:-}" ]; then
   [ "$(basename "$config")" = "dancer.config" ] || fail "generated config must be named dancer.config"
 fi
 
+dancer-config-validate "$config" >/dev/null || fail "configuration validation failed: $config"
+
 exec /usr/local/bin/dancer "$@"
