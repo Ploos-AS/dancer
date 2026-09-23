@@ -43,6 +43,7 @@ COPY --from=builder /out/usr/local/share/dancer/ /usr/local/share/dancer/
 COPY --from=builder --chown=dancer:dancer /out/data/ /data/
 COPY --chmod=0755 docker-entrypoint.sh /usr/local/bin/dancer-entrypoint
 COPY --chmod=0755 tools/dancer-config-overlay /usr/local/bin/dancer-config-overlay
+COPY --chmod=0755 tools/dancer-config-validate /usr/local/bin/dancer-config-validate
 USER dancer:dancer
 WORKDIR /data
 STOPSIGNAL SIGTERM
