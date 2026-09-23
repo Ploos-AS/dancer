@@ -377,6 +377,15 @@ jobs:
           chmod +x tests/ircd/qualify.sh
           tests/ircd/qualify.sh "${{ matrix.ircd }}"
 
+  tls-transport:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Qualify external TLS transport
+        run: |
+          chmod +x tests/tls/qualify.sh
+          tests/tls/qualify.sh
+
   multiarch:
     runs-on: ubuntu-latest
     steps:
