@@ -86,8 +86,9 @@ if [ "$target" = solanum ]; then
   export IRCD_PROBE_TIMEOUT
 fi
 docker run --rm --network "$network" \
+  -e IRCD_PROBE_TIMEOUT="${IRCD_PROBE_TIMEOUT:-15}" \
   -v "$PWD/tests/ircd/probe.py:/probe.py:ro" \
-  python:3-alpine sh -c 'IRCD_PROBE_TIMEOUT="${IRCD_PROBE_TIMEOUT:-15}" python3 /probe.py "$0" 6667' "$server"
+  python:3-alpine python3 /probe.py "$server" 6667
 
 docker run -d --name "$client" --network "$network" \
   -v "$PWD/$config_dir:/data" \
