@@ -359,6 +359,17 @@ jobs:
           esac
 
 
+  config-overlay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned Dancer image
+        run: docker build --progress=plain -t dancer:config-ci .
+      - name: Qualify config overlay against upstream example
+        run: |
+          chmod +x tools/dancer-config-overlay tests/config/overlay.sh
+          tests/config/overlay.sh
+
   ircd-matrix:
     runs-on: ubuntu-latest
     strategy:
