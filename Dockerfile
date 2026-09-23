@@ -45,6 +45,7 @@ COPY --chmod=0755 docker-entrypoint.sh /usr/local/bin/dancer-entrypoint
 COPY --chmod=0755 tools/dancer-config-overlay /usr/local/bin/dancer-config-overlay
 COPY --chmod=0755 tools/dancer-config-validate /usr/local/bin/dancer-config-validate
 COPY --chmod=0755 tools/dancer-config-generate /usr/local/bin/dancer-config-generate
+COPY --chmod=0755 tools/dancer-readiness /usr/local/bin/dancer-readiness
 USER dancer:dancer
 WORKDIR /data
 STOPSIGNAL SIGTERM
