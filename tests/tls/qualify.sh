@@ -55,9 +55,12 @@ docker run -d --name dancer-tls-proxy --network "$network" \
   -v "$work:/tls:ro" alpine:3.22 sh -c \
   "apk add --no-cache stunnel ca-certificates >/dev/null && stunnel /tls/stunnel-bad.conf" >/dev/null
 sleep 2
-if printf 'SHOULD_FAIL\r\n' | docker run --rm -i --network "$network" alpine:3.22 nc -w 3 dancer-tls-proxy 6667 >/dev/null 2>&1; then
-  echo "hostname-mismatched TLS connection unexpectedly succeeded" >&2
-  docker logs dancer-tls-proxy >&2 || true
+printf 'SHOULD_FAIL\r\n' | docker run --rm -i --network "$network" alpine:3.22 nc -w 3 dancer-tls-proxy 6667 >/dev/null 2>&1 || true
+sleep 1
+bad_logs=$(docker logs dancer-tls-proxy 2>&1 || true)
+if ! printf '%s\n' "$bad_logs" | grep -Eq 'Subject checks failed|Rejected by CERT|certificate verify failed'; then
+  echo "hostname-mismatched TLS connection was not rejected by certificate verification" >&2
+  printf '%s\n' "$bad_logs" >&2
   exit 1
 fi
 
