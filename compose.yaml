@@ -19,7 +19,7 @@ services:
     cap_drop:
       - ALL
     environment:
-      DANCER_CONFIG_OVERLAY_FILE: ${DANCER_CONFIG_OVERLAY_FILE:-}
+      DANCER_CONFIG_OVERLAY_FILE: /run/secrets/dancer_config_overlay
     secrets:
       - dancer_config_overlay
 
