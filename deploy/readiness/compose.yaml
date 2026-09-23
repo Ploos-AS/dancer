@@ -15,6 +15,32 @@ services:
     cap_drop:
       - ALL
 
+  observer:
+    image: ${DANCER_IMAGE:-ghcr.io/ploos-as/dancer:0.2}
+    restart: unless-stopped
+    user: "10001:10001"
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        dancer-irc-observer | dancer-readiness-watch
+    environment:
+      DANCER_OBSERVER_HOST: ${DANCER_OBSERVER_HOST:?set DANCER_OBSERVER_HOST}
+      DANCER_OBSERVER_PORT: ${DANCER_OBSERVER_PORT:-6667}
+      DANCER_OBSERVER_CHANNEL: ${DANCER_OBSERVER_CHANNEL:?set DANCER_OBSERVER_CHANNEL}
+      DANCER_OBSERVER_NICK: ${DANCER_OBSERVER_NICK:-dancer-observer}
+      DANCER_OBSERVER_INTERVAL: ${DANCER_OBSERVER_INTERVAL:-30}
+      DANCER_STATE_DIR: /run/dancer
+      DANCER_READY_STATE_FILE: /run/dancer/ready
+    volumes:
+      - dancer-state:/run/dancer
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
   readiness:
     image: ${DANCER_IMAGE:-ghcr.io/ploos-as/dancer:0.2}
     user: "10001:10001"
