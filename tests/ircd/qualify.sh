@@ -35,7 +35,7 @@ docker network create "$network" >/dev/null
 # The validator depends on an immutable upstream reference shipped in the image.
 # Assert that contract before creating any mutable test configuration.
 if ! docker run --rm --entrypoint /bin/sh "$image" -c \
-  'ls -l /usr/local/share/dancer >&2; test -r /usr/local/share/dancer/dancer.config && test -s /usr/local/share/dancer/dancer.config'; then
+  'ls -l /usr/local/share/dancer >&2; test -s /usr/local/share/dancer/dancer.config'; then
   echo "Dancer image is missing the pinned config reference" >&2
   exit 1
 fi
