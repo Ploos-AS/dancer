@@ -66,7 +66,10 @@ docker run --rm --network "$network" \
   -v "$PWD/tests/ircd/probe.py:/probe.py:ro" \
   python:3-alpine python3 /probe.py "$server" 6667
 
-docker run -d --name "$client" --network "$network" -v "$PWD/$config_dir:/data" "$image" >/dev/null
+docker run -d --name "$client" --network "$network" \
+  -v "$PWD/$config_dir:/data" \
+  -v "$PWD/$config_dir/dancer.config:/usr/local/share/dancer/dancer.config:ro" \
+  "$image" >/dev/null
 registered=0
 joined=0
 for _ in $(seq 1 30); do
