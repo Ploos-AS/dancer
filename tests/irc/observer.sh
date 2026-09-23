@@ -4,7 +4,7 @@ set -eu
 work=${RUNNER_TEMP:-/tmp}/dancer-observer-$$
 network=dancer-observer-$$
 cleanup() {
-  docker rm -f dancer-observer-fixture >/dev/null 2>&1 || true
+  docker rm -f dancer-observer-fixture dancer-observer-bridge >/dev/null 2>&1 || true
   rm -rf "$work"
   docker network rm "$network" >/dev/null 2>&1 || true
 }
