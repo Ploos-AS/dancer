@@ -12,13 +12,18 @@ fail() { echo "dancer-config-validate: $*" >&2; exit 65; }
 # directive prefixes from the pinned upstream Dancer 4.16 example instead of
 # inventing a new schema for the legacy application.
 prefixes() {
-  sed -n -E '
-    /^[[:space:]]*#/d
-    /^[[:space:]]*$/d
-    /[:=]/ {
-      s/[[:space:]]+$//
-      s/^([[:space:]]*[^:=]+[:=]).*$/\1/
-      p
+  # Dancer 4.16's example is whitespace-oriented rather than key=value.
+  # Treat the first non-comment token as the directive key; this preserves
+  # upstream grammar instead of imposing a new configuration syntax.
+  awk '
+    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+    {
+      line=$0
+      sub(/^[[:space:]]+/, "", line)
+      split(line, fields, /[[:space:]]+/)
+      key=fields[1]
+      sub(/[:=]$/, "", key)
+      if (key != "") print key
     }
   ' "$1" | sort -u
 }
