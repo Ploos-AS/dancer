@@ -414,6 +414,13 @@ jobs:
         run: |
           chmod +x tools/dancer-readiness tools/dancer-readiness-watch tools/dancer-readiness-mark tools/dancer-irc-observer tests/irc/observer.sh
           tests/irc/observer.sh
+      - name: Qualify readiness Compose boundaries
+        env:
+          DANCER_OBSERVER_HOST: irc.example.invalid
+          DANCER_OBSERVER_CHANNEL: '#dancer-ci'
+        run: |
+          chmod +x tests/irc/readiness-compose.sh
+          tests/irc/readiness-compose.sh
       - name: Qualify external TLS transport
         run: |
           chmod +x tests/tls/qualify.sh
