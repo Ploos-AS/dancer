@@ -10,11 +10,12 @@ true on `main`:
    container-level disconnect recovery.
 5. Configuration preflight tests pass.
 6. Compose security/runtime contract tests pass.
-7. `CHANGELOG.md` has no release-critical changes left only under
+7. The pinned upstream archive checksum and `COPYING` GPL marker are verified by the Docker build, and `docs/UPSTREAM-COMPAT.md` matches the pinned version/checksum and compatibility-edit surface.
+8. `CHANGELOG.md` has no release-critical changes left only under
    `Unreleased`; the intended release notes are finalized.
-8. The release workflow publishes all four architectures and its post-push
+9. The release workflow publishes all four architectures and its post-push
    GHCR manifest/image smoke tests pass.
-9. SBOM, provenance, and registry attestation are produced by the release
+10. SBOM, provenance, and registry attestation are produced by the release
    workflow.
 
 A failed post-push release smoke test means the tag is not considered
