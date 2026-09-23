@@ -369,6 +369,12 @@ jobs:
         run: |
           chmod +x tools/dancer-config-overlay tests/config/overlay.sh
           tests/config/overlay.sh
+      - name: Qualify config validator and generator
+        run: |
+          chmod +x tools/dancer-config-overlay tools/dancer-config-validate tools/dancer-config-generate
+          chmod +x tests/config/validate.sh tests/config/generate.sh
+          tests/config/validate.sh
+          tests/config/generate.sh
       - name: Qualify optional Compose secrets profile
         run: |
           chmod +x tests/config/compose-secrets.sh
