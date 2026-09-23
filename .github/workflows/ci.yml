@@ -52,7 +52,11 @@ jobs:
           docker image inspect dancer:m0 --format '{{json .Config.Healthcheck.Test}}' | grep -q '/proc/1/comm'
           id=$(docker run -d --network none dancer:m0)
           sleep 2
-          docker stop -t 3 "$id" >/dev/null
+          # The stock template intentionally has no active server/channel/nick,
+          # so Dancer may already have exited cleanly before docker stop.
+          if [ "$(docker inspect "$id" --format '{{.State.Running}}')" = "true" ]; then
+            docker stop -t 3 "$id" >/dev/null
+          fi
           test "$(docker inspect "$id" --format '{{.State.ExitCode}}')" -eq 0
           docker rm "$id" >/dev/null
       - name: Run isolated IRC handshake
