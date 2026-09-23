@@ -1,0 +1,37 @@
+#!/bin/sh
+set -eu
+
+host=${DANCER_OBSERVER_HOST:?set DANCER_OBSERVER_HOST}
+port=${DANCER_OBSERVER_PORT:-6667}
+channel=${DANCER_OBSERVER_CHANNEL:?set DANCER_OBSERVER_CHANNEL}
+nick=${DANCER_OBSERVER_NICK:-dancer-observer}
+interval=${DANCER_OBSERVER_INTERVAL:-30}
+
+case "$port:$interval" in *[!0-9:]*|:*) echo "invalid observer port/interval" >&2; exit 64 ;; esac
+
+connected=0
+while :; do
+  fifo=$(mktemp -u)
+  mkfifo "$fifo"
+  {
+    printf 'NICK %s\r\n' "$nick"
+    printf 'USER %s 0 * :Dancer readiness observer\r\n' "$nick"
+    sleep 2
+    printf 'JOIN %s\r\n' "$channel"
+    sleep 3
+  } > "$fifo" &
+
+  if timeout 10 nc "$host" "$port" < "$fifo" 2>/dev/null | grep -Eiq "( 001 |JOIN .*${channel}|:${nick}!.* JOIN .*${channel})"; then
+    if [ "$connected" -eq 0 ]; then
+      dancer-readiness-mark channel-up
+      connected=1
+    else
+      dancer-readiness-mark reconnect
+    fi
+  else
+    if [ "$connected" -eq 1 ]; then dancer-readiness-mark disconnect; fi
+    connected=0
+  fi
+  rm -f "$fifo"
+  sleep "$interval"
+done
