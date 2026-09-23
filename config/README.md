@@ -41,3 +41,24 @@ The secret file is mounted as `/run/secrets/dancer_config_overlay`. The entrypoi
 The overlay deliberately does not understand or invent Dancer directives. Its secret file must contain one complete `:` or `=` configuration line whose prefix already occurs exactly once in the pinned upstream-derived configuration. Unknown or ambiguous prefixes are rejected.
 
 Keep the source secret outside the repository. Do not add `secrets/` contents to version control.
+
+
+## External configuration tools
+
+The image includes three deliberately conservative tools:
+
+- `dancer-config-generate` starts from the pinned upstream Dancer 4.16 example and optionally applies complete-line overlays.
+- `dancer-config-overlay` replaces only an existing, uniquely matched `:` or `=` line prefix.
+- `dancer-config-validate` compares directive prefixes with the pinned upstream example and rejects unknown structure before Dancer starts.
+
+Generate an unchanged operator copy from the image reference configuration:
+
+```sh
+docker run --rm --entrypoint dancer-config-generate \\
+  -v "$PWD/config:/out" \\
+  ghcr.io/ploos-as/dancer:0.2 /out/dancer.config
+```
+
+For overlays, mount each overlay file and provide their paths in `DANCER_CONFIG_OVERLAYS`, separated by colons. Each overlay file contains one complete replacement configuration line. The generator validates the resulting file before writing it.
+
+These tools are not a replacement parser for Dancer 4.16. They intentionally derive their structural contract from the pinned upstream example so that modern operational tooling does not become a feature fork or an undocumented configuration dialect.
