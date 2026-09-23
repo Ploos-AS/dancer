@@ -1,22 +1,44 @@
 #!/bin/sh
 set -eu
 
-# Convert an external observer stream into the deployment-neutral readiness
-# state consumed by dancer-readiness. The observer owns IRC knowledge; this
-# watcher only records successful observations.
 state_file=${DANCER_READY_STATE_FILE:-/run/dancer/ready}
-marker=${DANCER_READY_MARKER:-DANCER_IRC_CHANNEL_OK}
+state_dir=$(dirname "$state_file")
+ready_marker=${DANCER_READY_MARKER:-DANCER_IRC_CHANNEL_OK}
+reconnect_marker=${DANCER_RECONNECT_MARKER:-DANCER_IRC_RECONNECT_OK}
+disconnect_marker=${DANCER_DISCONNECT_MARKER:-DANCER_IRC_FORCE_RECONNECT}
 
-mkdir -p "$(dirname "$state_file")"
+mkdir -p "$state_dir"
 rm -f "$state_file"
+: > "$state_dir/reconnects"
+printf '0\n' > "$state_dir/reconnects"
+printf '0\n' > "$state_dir/channel_up"
+
+write_atomic() {
+  path=$1
+  value=$2
+  tmp="${path}.$$"
+  printf '%s\n' "$value" > "$tmp"
+  chmod 0644 "$tmp"
+  mv -f "$tmp" "$path"
+}
 
 while IFS= read -r line; do
   case "$line" in
-    *"$marker"*)
-      tmp="${state_file}.$$"
-      date +%s > "$tmp"
-      chmod 0644 "$tmp"
-      mv -f "$tmp" "$state_file"
+    *"$disconnect_marker"*)
+      write_atomic "$state_dir/channel_up" 0
+      ;;
+  esac
+  case "$line" in
+    *"$ready_marker"*)
+      write_atomic "$state_file" "$(date +%s)"
+      write_atomic "$state_dir/channel_up" 1
+      ;;
+  esac
+  case "$line" in
+    *"$reconnect_marker"*)
+      n=$(cat "$state_dir/reconnects" 2>/dev/null || printf '0')
+      case "$n" in ''|*[!0-9]*) n=0 ;; esac
+      write_atomic "$state_dir/reconnects" "$((n + 1))"
       ;;
   esac
 done
