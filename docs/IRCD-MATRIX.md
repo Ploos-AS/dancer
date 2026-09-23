@@ -6,8 +6,8 @@ M3 qualifies the packaged, unchanged Dancer 4.16 client behavior against modern 
 
 | IRCd | Container source | Plain IRC | TLS | Status |
 | --- | --- | --- | --- | --- |
-| Ergo | `ghcr.io/ergochat/ergo:stable` | 6667 | 6697 | planned |
-| InspIRCd | `inspircd/inspircd-docker` | 6667 | 6697 | planned |
+| Ergo | `ghcr.io/ergochat/ergo:stable` | 6667 | 6697 | CI target implemented; qualification pending green run |
+| InspIRCd | `inspircd/inspircd-docker:4.8.0` | 6667 | 6697 | CI target implemented; qualification pending green run |
 | Solanum | upstream-derived CI image | 6667 | external TLS strategy | planned |
 
 Ergo and InspIRCd are first because their upstream projects document container operation and plaintext port 6667, which lets the compatibility test stay independent of the later TLS transport qualification.
