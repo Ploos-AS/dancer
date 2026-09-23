@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+
+state_file=${DANCER_READY_STATE_FILE:-/run/dancer/ready}
+max_age=${DANCER_READY_MAX_AGE:-120}
+now=$(date +%s)
+ready=0
+age=-1
+
+if [ -r "$state_file" ]; then
+  ready_at=$(cat "$state_file" 2>/dev/null || true)
+  case "$ready_at" in
+    ''|*[!0-9]*) ;;
+    *)
+      age=$((now - ready_at))
+      if [ "$age" -ge 0 ] && [ "$age" -le "$max_age" ]; then ready=1; fi
+      ;;
+  esac
+fi
+
+cat <<EOF
+# HELP dancer_irc_ready Whether a recent successful IRC observation exists.
+# TYPE dancer_irc_ready gauge
+dancer_irc_ready $ready
+# HELP dancer_irc_observation_age_seconds Age of the latest successful IRC observation, or -1 if unavailable.
+# TYPE dancer_irc_observation_age_seconds gauge
+dancer_irc_observation_age_seconds $age
+EOF
