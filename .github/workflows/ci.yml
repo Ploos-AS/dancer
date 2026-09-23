@@ -71,7 +71,165 @@ jobs:
           grep -Fxq 'dancer_irc_ready 1' metrics.txt
           grep -Fxq 'dancer_irc_channel_up 1' metrics.txt
           grep -Fxq 'dancer_irc_reconnects_total 2' metrics.txt
-          echo "Observer state and Prometheus reconnect/channel metrics passed"
+          grep -Eq '^dancer_observer_uptime_seconds [0-9]+
+      - name: Build Dancer on Alpine
+        run: docker build --progress=plain -t dancer:m0 .
+      - name: Verify runtime layout
+        run: |
+          id=$(docker create dancer:m0)
+          docker export "$id" > rootfs.tar
+          tar -tf rootfs.tar > rootfs.list
+          grep -Fxq 'usr/local/bin/dancer' rootfs.list
+          grep -Fxq 'data/dancer.config' rootfs.list
+          grep -Fxq 'data/dancer.users' rootfs.list
+          grep -Fxq 'data/dancer.funcs' rootfs.list
+          grep -Fxq 'data/dancer.explain' rootfs.list
+          test "$(docker image inspect dancer:m0 --format '{{.Config.User}}')" = 'dancer:dancer'
+          test "$(docker run --rm --entrypoint id dancer:m0 -u)" = '10001'
+          test "$(docker run --rm --entrypoint id dancer:m0 -g)" = '10001'
+          docker run --rm --entrypoint sh dancer:m0 -c 'touch /data/.write-test && rm /data/.write-test'
+          test "$(docker run --rm --entrypoint stat dancer:m0 -c '%a:%u:%g' /data)" = '755:10001:10001'
+          docker run --rm --entrypoint sh dancer:m0 -c 'test ! -w /usr/local/bin/dancer && test ! -w /usr/local/share/dancer/dancer.config'
+          docker rm "$id"
+      - name: Verify configuration preflight failures
+        run: |
+          set -e
+          mkdir -p tests/preflight-empty
+          set +e
+          docker run --rm -v "$PWD/tests/preflight-empty:/data:ro" dancer:m0 >missing.log 2>&1
+          missing_rc=$?
+          set -e
+          cat missing.log
+          test "$missing_rc" -eq 64
+          grep -Fq 'missing configuration: /data/dancer.config' missing.log
+      - name: Verify declared stop signal
+        run: test "$(docker image inspect dancer:m0 --format '{{.Config.StopSignal}}')" = 'SIGTERM'
+      - name: Verify healthcheck contract
+        run: |
+          docker image inspect dancer:m0 --format '{{json .Config.Healthcheck.Test}}' | grep -q '/proc/1/comm'
+          id=$(docker run -d --network none dancer:m0)
+          trap 'docker rm -f "$id" >/dev/null 2>&1 || true' EXIT
+          for _ in $(seq 1 15); do
+            status=$(docker inspect "$id" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')
+            echo "health=$status"
+            [ "$status" = healthy ] && exit 0
+            [ "$status" = unhealthy ] && { docker inspect "$id" --format '{{json .State.Health}}'; exit 1; }
+            sleep 2
+          done
+          docker inspect "$id" --format '{{json .State.Health}}'
+          exit 1
+      - name: Probe graceful shutdown
+        run: |
+          id=$(docker run -d --network none dancer:m0)
+          sleep 2
+          docker stop -t 3 "$id" >/dev/null
+          rc=$(docker inspect "$id" --format '{{.State.ExitCode}}')
+          echo "Dancer docker-stop exit code: $rc"
+          docker logs "$id"
+          docker rm "$id" >/dev/null
+          test "$rc" -eq 0
+      - name: Run isolated IRC handshake
+        run: |
+          set -e
+          rm -rf tests/irc/config
+          mkdir -p tests/irc/config
+          cid=$(docker create dancer:m0)
+          docker cp "$cid:/usr/local/share/dancer/." tests/irc/config/
+          docker rm "$cid" >/dev/null
+          test -f tests/irc/config/dancer.config
+          awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = irc-test:6667"; done=1 } {print}' tests/irc/config/dancer.config > tests/irc/config/dancer.config.new
+          mv tests/irc/config/dancer.config.new tests/irc/config/dancer.config
+          sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' tests/irc/config/dancer.config
+          sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' tests/irc/config/dancer.config
+          echo "=== Dancer required IRC directives after rewrite ==="
+          grep -Ein '^[[:space:]]*#?[[:space:]]*(server|channel|nick)[[:space:]]*=' tests/irc/config/dancer.config || true
+          grep -Eq '^[[:space:]]*server[[:space:]]*=[[:space:]]*irc-test:6667([[:space:]]|$)' tests/irc/config/dancer.config
+          sudo chown -R 10001:10001 tests/irc/config
+          docker network create dancer-m0-test
+          cleanup() {
+            docker rm -f irc-test dancer-m0-test-client >/dev/null 2>&1 || true
+            docker network rm dancer-m0-test >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          docker run -d --name irc-test --network dancer-m0-test -v "$PWD/tests/irc/server.py:/server.py:ro" python:3-alpine python3 /server.py
+          sleep 1
+          docker run --rm --network dancer-m0-test alpine:3.22 getent hosts irc-test
+          docker run --rm --network dancer-m0-test --entrypoint /bin/sh dancer:m0 -c 'getent hosts irc-test || true'
+          docker run -d --name dancer-m0-test-client --restart unless-stopped --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0
+          sleep 1
+          echo "=== Dancer runtime process/files ==="
+          docker exec dancer-m0-test-client sh -c 'pwd; id; ps 2>/dev/null || true; ls -la /data; echo "--- dancer.config ---"; cat /data/dancer.config; echo "--- writable probe ---"; touch /data/.ci-write-probe && rm /data/.ci-write-probe' || true
+          handshake=0
+          for _ in $(seq 1 15); do
+            if docker logs irc-test 2>&1 | grep -q 'DANCER_IRC_RECONNECT_OK'; then
+              handshake=1
+              break
+            fi
+            sleep 1
+          done
+          echo "=== Dancer integration logs ==="
+          docker logs dancer-m0-test-client || true
+          echo "=== Dancer runtime files ==="
+          for f in dancer.serv logfile; do
+            echo "--- /data/$f ---"
+            if [ -f "tests/irc/config/$f" ]; then cat "tests/irc/config/$f"; else echo "(missing)"; fi
+          done
+          echo "=== IRC fixture logs ==="
+          docker logs irc-test || true
+          docker inspect dancer-m0-test-client --format 'Dancer state: status={{.State.Status}} exit={{.State.ExitCode}}' || true
+          docker inspect irc-test --format 'IRC fixture state: status={{.State.Status}} exit={{.State.ExitCode}}' || true
+          test "$handshake" -eq 1
+          docker logs irc-test | grep -q 'DANCER_IRC_HANDSHAKE_OK'
+          docker logs irc-test | grep -q 'DANCER_IRC_PING_PONG_OK'
+          docker logs irc-test | grep -q 'DANCER_IRC_JOIN_OK'
+          docker logs irc-test | grep -q 'DANCER_IRC_CHANNEL_OK'
+          docker logs irc-test | grep -q 'DANCER_IRC_RECONNECT_OK'
+          test "$(docker logs irc-test | grep -c '^NICK[[:space:]]')" -ge 2
+          test "$(docker logs irc-test | grep -c '^USER[[:space:]]')" -ge 2
+          test "$(docker inspect dancer-m0-test-client --format '{{.RestartCount}}')" -ge 1
+          docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
+          docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
+          sh tests/irc/readiness.sh dancer-m0-test-client irc-test
+          ready_state="$RUNNER_TEMP/dancer-irc-ready"
+          DANCER_READY_STATE_FILE="$ready_state" docker logs irc-test 2>&1 | DANCER_READY_STATE_FILE="$ready_state" sh tools/dancer-readiness-watch
+          DANCER_READY_STATE_FILE="$ready_state" DANCER_READY_MAX_AGE=120 sh tools/dancer-readiness
+          echo "External IRC readiness probe and deployment-neutral state contract passed"
+          echo "IRC registration, PING/PONG, JOIN, and reconnect assertions passed"
+      - name: Verify Dancer finds working-directory config
+        run: |
+          set +e
+          timeout --kill-after=2s 5s docker run --rm --network none dancer:m0 >dancer-startup.log 2>&1
+          rc=$?
+          set -e
+          cat dancer-startup.log
+          echo "Dancer startup probe exit code: $rc"
+          if grep -Fq "./dancer.config not found!" dancer-startup.log; then
+            echo "Dancer failed to load /data/dancer.config" >&2
+            exit 1
+          fi
+          case "$rc" in
+            124|137) ;;
+            *) echo "Dancer exited unexpectedly with code $rc" >&2; exit 1 ;;
+          esac
+
+  multiarch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Qualify amd64 and arm64 builds
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+ metrics.txt
+          uptime=$(awk '$1 == "dancer_observer_uptime_seconds" {print $2}' metrics.txt)
+          test "$uptime" -ge 0
+          echo "Observer state and Prometheus reconnect/channel/uptime metrics passed"
       - name: Build Dancer on Alpine
         run: docker build --progress=plain -t dancer:m0 .
       - name: Verify runtime layout
