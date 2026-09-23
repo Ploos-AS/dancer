@@ -1,0 +1,52 @@
+services:
+  dancer:
+    image: ${DANCER_IMAGE:-ghcr.io/ploos-as/dancer:0.2}
+    restart: unless-stopped
+    user: "10001:10001"
+    init: true
+    depends_on:
+      tls-proxy:
+        condition: service_started
+    volumes:
+      - ./config:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - dancer-internal
+
+  tls-proxy:
+    image: ${STUNNEL_IMAGE:-alpine:3.22}
+    restart: unless-stopped
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        apk add --no-cache stunnel ca-certificates
+        envsubst < /etc/stunnel/dancer.conf.template > /tmp/dancer.conf
+        exec stunnel /tmp/dancer.conf
+    environment:
+      IRC_TLS_HOST: ${IRC_TLS_HOST:?set IRC_TLS_HOST}
+      IRC_TLS_PORT: ${IRC_TLS_PORT:-6697}
+    volumes:
+      - ./stunnel.conf:/etc/stunnel/dancer.conf.template:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - dancer-internal
+      - outbound
+
+networks:
+  dancer-internal:
+    internal: true
+  outbound:
