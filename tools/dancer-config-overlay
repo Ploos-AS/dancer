@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+
+src=${1:-/data/dancer.config}
+dst=${2:-/run/dancer/dancer.config}
+
+[ -r "$src" ] || { echo "dancer-config-overlay: unreadable source: $src" >&2; exit 66; }
+mkdir -p "$(dirname "$dst")"
+
+# Overlay syntax is deliberately generic: exact full lines only.
+# This avoids inventing or reinterpreting Dancer 4.16 configuration grammar.
+# Each secret file contains one complete replacement line. The match key is
+# the non-secret prefix before the first ':' or '=' and must already exist in
+# the pinned upstream configuration.
+apply_line_file() {
+  file=$1
+  current=$2
+  [ -n "$file" ] || { printf '%s\n' "$current"; return; }
+  [ -r "$file" ] || { echo "dancer-config-overlay: unreadable overlay: $file" >&2; exit 66; }
+  line=$(sed -n '1p' "$file")
+  [ -n "$line" ] || { echo "dancer-config-overlay: empty overlay: $file" >&2; exit 65; }
+  case "$line" in
+    *:*) key=${line%%:*}: ;;
+    *=*) key=${line%%=*}= ;;
+    *) echo "dancer-config-overlay: overlay must contain a complete existing ':' or '=' config line" >&2; exit 65 ;;
+  esac
+  matches=$(printf '%s\n' "$current" | grep -F -c "$key" || true)
+  [ "$matches" -eq 1 ] || { echo "dancer-config-overlay: key '$key' matched $matches lines; refusing" >&2; exit 65; }
+  printf '%s\n' "$current" | awk -v key="$key" -v replacement="$line" 'index($0,key)==1 {print replacement; next} {print}'
+}
+
+content=$(cat "$src")
+content=$(apply_line_file "${DANCER_CONFIG_OVERLAY_FILE:-}" "$content")
+umask 077
+printf '%s\n' "$content" > "$dst"
+printf '%s\n' "$dst"
