@@ -50,6 +50,7 @@ COPY --chmod=0755 tools/dancer-readiness /usr/local/bin/dancer-readiness
 COPY --chmod=0755 tools/dancer-readiness-watch /usr/local/bin/dancer-readiness-watch
 COPY --chmod=0755 tools/dancer-readiness-mark /usr/local/bin/dancer-readiness-mark
 COPY --chmod=0755 tools/dancer-irc-observer /usr/local/bin/dancer-irc-observer
+COPY --chmod=0755 tools/dancer-metrics /usr/local/bin/dancer-metrics
 USER dancer:dancer
 WORKDIR /data
 STOPSIGNAL SIGTERM
