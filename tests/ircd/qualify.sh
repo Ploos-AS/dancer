@@ -60,6 +60,10 @@ grep -E '^[[:space:]]*(server|channel|nick)[[:space:]]*=' "$config_dir/dancer.co
 sudo chown -R 10001:10001 "$config_dir"
 
 case "$target" in
+  solanum)
+    IRCD_PROBE_TIMEOUT=45
+    export IRCD_PROBE_TIMEOUT
+    ;;
   inspircd)
     docker run -d --name "$server" --network "$network" -e INSP_ENABLE_DNSBL=no "$server_image" >/dev/null
     ;;
@@ -83,7 +87,7 @@ docker run --rm --network "$network" alpine:3.22 sh -c "nc -z $server 6667"
 # Independently prove that this IRCd accepts registration, PING/PONG and JOIN.
 docker run --rm --network "$network" \
   -v "$PWD/tests/ircd/probe.py:/probe.py:ro" \
-  python:3-alpine python3 /probe.py "$server" 6667
+  python:3-alpine sh -c 'IRCD_PROBE_TIMEOUT="${IRCD_PROBE_TIMEOUT:-15}" python3 /probe.py "$0" 6667' "$server"
 
 docker run -d --name "$client" --network "$network" \
   -v "$PWD/$config_dir:/data" \
