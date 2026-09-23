@@ -37,10 +37,13 @@ cid=$(docker create "$image")
 docker cp "$cid:/usr/local/share/dancer/." "$config_dir/"
 docker rm "$cid" >/dev/null
 
-awk -v server="$server" 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = " server ":6667"; done=1 } {print}' "$config_dir/dancer.config" > "$config_dir/dancer.config.new"
+awk -v server="$server" '
+  /^[[:space:]]*server[[:space:]]*=/ { sub(/=.*/, "= " server ":6667") }
+  /^[[:space:]]*channel[[:space:]]*=/ { sub(/=.*/, "= #dancer-ci") }
+  /^[[:space:]]*nick[[:space:]]*=/ { sub(/=.*/, "= dancer-ci") }
+  { print }
+' "$config_dir/dancer.config" > "$config_dir/dancer.config.new"
 mv "$config_dir/dancer.config.new" "$config_dir/dancer.config"
-sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' "$config_dir/dancer.config"
-sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' "$config_dir/dancer.config"
 sudo chown -R 10001:10001 "$config_dir"
 
 case "$target" in
