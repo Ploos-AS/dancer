@@ -16,8 +16,14 @@ line=$(awk '
   { line=$0; sub(/^[[:space:]]+/, "", line); split(line, f, /[[:space:]]+/); key=f[1]; sub(/[:=]$/, "", key); count[key]++; sample[key]=$0 }
   END { for (key in count) if (count[key] == 1) { print sample[key]; exit } }
 ' "$work/dancer.config")
+if [ -z "$line" ]; then
+  line=$(awk '
+    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+    { print; exit }
+  ' "$work/dancer.config")
+fi
 [ -n "$line" ] || {
-  echo "No unique active directive found in pinned upstream dancer.config" >&2
+  echo "No active directive found in pinned upstream dancer.config" >&2
   exit 1
 }
 key=$(printf '%s\n' "$line" | awk '{k=$1; sub(/[:=]$/, "", k); print k}')
