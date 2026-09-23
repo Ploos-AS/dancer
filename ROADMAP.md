@@ -41,7 +41,7 @@
 **No-fork policy:** Ploos-AS/dancer packages upstream Dancer; it does not maintain a feature fork. Upstream source modifications are limited to minimal, documented compatibility fixes required to build or operate Dancer on supported platforms. New operational functionality belongs in external tooling, container integration, CI, or sidecars.
 
 - [x] Document and CI-enforce the no-fork boundary and inventory every upstream compatibility patch.
-- [ ] Add secrets/config overlays without storing IRC credentials in Git.
+- [x] Add secrets/config overlays without storing IRC credentials in Git: opt-in Compose secret mount, syntax-preserving runtime generation, restrictive permissions, CI qualification, and local secret ignore rules.
 - [ ] Add external configuration generation and syntax-aware validation based on documented upstream Dancer 4.16 semantics.
 - [ ] Add connection-aware readiness distinct from the process healthcheck.
 - [ ] Add external observability/Prometheus metrics for uptime, IRC connection state, reconnects, and channel state without modifying Dancer feature code.
