@@ -369,6 +369,10 @@ jobs:
         run: |
           chmod +x tools/dancer-config-overlay tests/config/overlay.sh
           tests/config/overlay.sh
+      - name: Qualify optional Compose secrets profile
+        run: |
+          chmod +x tests/config/compose-secrets.sh
+          tests/config/compose-secrets.sh
 
   ircd-matrix:
     runs-on: ubuntu-latest
