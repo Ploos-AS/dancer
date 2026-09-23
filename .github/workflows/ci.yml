@@ -466,6 +466,61 @@ jobs:
           test "$joined" -eq 1
           echo "Dancer registration and channel behavior qualified against InspIRCd"
 
+
+  ircd-solanum:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Dancer and Solanum
+        run: |
+          docker build --progress=plain -t dancer:ircd-matrix .
+          docker build --progress=plain -f tests/ircd/solanum.Dockerfile -t solanum:dancer-ci .
+      - name: Qualify Dancer against Solanum
+        run: |
+          set -e
+          network=dancer-solanum-ci
+          cleanup() {
+            docker rm -f dancer-solanum solanum-ci >/dev/null 2>&1 || true
+            docker network rm "$network" >/dev/null 2>&1 || true
+            rm -rf tests/ircd-solanum
+          }
+          trap cleanup EXIT
+          docker network create "$network"
+          mkdir -p tests/ircd-solanum
+          cid=$(docker create dancer:ircd-matrix)
+          docker cp "$cid:/usr/local/share/dancer/." tests/ircd-solanum/
+          docker rm "$cid" >/dev/null
+          awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = solanum-ci:6667"; done=1 } {print}' tests/ircd-solanum/dancer.config > tests/ircd-solanum/dancer.config.new
+          mv tests/ircd-solanum/dancer.config.new tests/ircd-solanum/dancer.config
+          sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' tests/ircd-solanum/dancer.config
+          sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' tests/ircd-solanum/dancer.config
+          sudo chown -R 10001:10001 tests/ircd-solanum
+          docker run -d --name solanum-ci --network "$network" solanum:dancer-ci
+          for _ in $(seq 1 30); do
+            if docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z solanum-ci 6667'; then break; fi
+            sleep 1
+          done
+          docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z solanum-ci 6667'
+          docker run -d --name dancer-solanum --network "$network" -v "$PWD/tests/ircd-solanum:/data" dancer:ircd-matrix
+          registered=0
+          joined=0
+          for _ in $(seq 1 30); do
+            if docker exec dancer-solanum sh -c 'grep -Eiq "(001|Welcome)" /data/logfile /data/dancer.serv 2>/dev/null'; then registered=1; fi
+            if docker exec dancer-solanum sh -c 'grep -Eiq "(JOIN|joined|#dancer-ci)" /data/logfile /data/dancer.serv 2>/dev/null'; then joined=1; fi
+            [ "$registered" -eq 1 ] && [ "$joined" -eq 1 ] && break
+            sleep 1
+          done
+          echo "=== Solanum logs ==="
+          docker logs solanum-ci || true
+          echo "=== Dancer logs ==="
+          docker logs dancer-solanum || true
+          echo "=== Dancer runtime files ==="
+          for x in tests/ircd-solanum/logfile tests/ircd-solanum/dancer.serv; do [ ! -f "$x" ] || { echo "--- $x"; cat "$x"; }; done
+          test "$(docker inspect dancer-solanum --format '{{.State.Running}}')" = true
+          test "$registered" -eq 1
+          test "$joined" -eq 1
+          echo "Dancer registration and channel behavior qualified against Solanum"
+
   multiarch:
     runs-on: ubuntu-latest
     steps:
