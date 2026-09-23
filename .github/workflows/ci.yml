@@ -383,6 +383,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build Dancer for TLS qualification
         run: docker build --progress=plain -t dancer:tls-ci .
+      - name: Validate TLS Compose isolation policy
+        env:
+          IRC_TLS_HOST: irc.example.invalid
+        run: |
+          chmod +x tests/tls/compose-profile.sh
+          tests/tls/compose-profile.sh
       - name: Qualify external TLS transport
         run: |
           chmod +x tests/tls/qualify.sh
