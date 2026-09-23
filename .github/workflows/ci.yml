@@ -164,7 +164,10 @@ jobs:
           docker logs irc-test | grep -Eq '^NICK[[:space:]]+[^[:space:]]+'
           docker logs irc-test | grep -Eq '^USER[[:space:]]+[^[:space:]]+'
           sh tests/irc/readiness.sh dancer-m0-test-client irc-test
-          echo "External IRC readiness probe passed"
+          ready_state="$RUNNER_TEMP/dancer-irc-ready"
+          DANCER_READY_STATE_FILE="$ready_state" docker logs irc-test 2>&1 | DANCER_READY_STATE_FILE="$ready_state" sh tools/dancer-readiness-watch
+          DANCER_READY_STATE_FILE="$ready_state" DANCER_READY_MAX_AGE=120 sh tools/dancer-readiness
+          echo "External IRC readiness probe and deployment-neutral state contract passed"
           echo "IRC registration, PING/PONG, JOIN, and reconnect assertions passed"
       - name: Verify Dancer finds working-directory config
         run: |
