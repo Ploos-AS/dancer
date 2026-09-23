@@ -358,6 +358,61 @@ jobs:
             *) echo "Dancer exited unexpectedly with code $rc" >&2; exit 1 ;;
           esac
 
+
+  ircd-ergo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Dancer
+        run: docker build --progress=plain -t dancer:ircd-matrix .
+      - name: Qualify Dancer against Ergo
+        run: |
+          set -e
+          network=dancer-ergo-ci
+          cleanup() {
+            docker rm -f dancer-ergo ergo-ci >/dev/null 2>&1 || true
+            docker network rm "$network" >/dev/null 2>&1 || true
+            rm -rf tests/ircd-ergo
+          }
+          trap cleanup EXIT
+          docker network create "$network"
+          mkdir -p tests/ircd-ergo
+          cid=$(docker create dancer:ircd-matrix)
+          docker cp "$cid:/usr/local/share/dancer/." tests/ircd-ergo/
+          docker rm "$cid" >/dev/null
+          awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = ergo-ci:6667"; done=1 } {print}' tests/ircd-ergo/dancer.config > tests/ircd-ergo/dancer.config.new
+          mv tests/ircd-ergo/dancer.config.new tests/ircd-ergo/dancer.config
+          sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' tests/ircd-ergo/dancer.config
+          sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' tests/ircd-ergo/dancer.config
+          sudo chown -R 10001:10001 tests/ircd-ergo
+          docker run -d --init --name ergo-ci --network "$network" ghcr.io/ergochat/ergo:stable
+          for _ in $(seq 1 30); do
+            if docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z ergo-ci 6667'; then break; fi
+            sleep 1
+          done
+          docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z ergo-ci 6667'
+          docker run -d --name dancer-ergo --network "$network" -v "$PWD/tests/ircd-ergo:/data" dancer:ircd-matrix
+          registered=0
+          joined=0
+          for _ in $(seq 1 30); do
+            logs=$(docker logs dancer-ergo 2>&1 || true)
+            printf '%s\n' "$logs"
+            if printf '%s\n' "$logs" | grep -Eq '(^|[^0-9])001([^0-9]|$)|Welcome'; then registered=1; fi
+            if docker exec dancer-ergo sh -c 'grep -Eiq "(JOIN|joined|#dancer-ci)" /data/logfile /data/dancer.serv 2>/dev/null'; then joined=1; fi
+            [ "$registered" -eq 1 ] && [ "$joined" -eq 1 ] && break
+            sleep 1
+          done
+          echo "=== Ergo logs ==="
+          docker logs ergo-ci || true
+          echo "=== Dancer logs ==="
+          docker logs dancer-ergo || true
+          echo "=== Dancer runtime files ==="
+          for x in tests/ircd-ergo/logfile tests/ircd-ergo/dancer.serv; do [ ! -f "$x" ] || { echo "--- $x"; cat "$x"; }; done
+          test "$(docker inspect dancer-ergo --format '{{.State.Running}}')" = true
+          test "$registered" -eq 1
+          test "$joined" -eq 1
+          echo "Dancer registration and channel behavior qualified against Ergo"
+
   multiarch:
     runs-on: ubuntu-latest
     steps:
