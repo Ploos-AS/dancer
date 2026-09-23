@@ -4,7 +4,7 @@ set -eu
 work=${RUNNER_TEMP:-/tmp}/dancer-tls-$$
 network=dancer-tls-ci
 cleanup() {
-  docker rm -f dancer-tls-proxy dancer-tls-server >/dev/null 2>&1 || true
+  docker rm -f dancer-tls-client dancer-tls-proxy dancer-tls-server >/dev/null 2>&1 || true
   docker network rm "$network" >/dev/null 2>&1 || true
   rm -rf "$work"
 }
@@ -62,3 +62,38 @@ if printf 'SHOULD_FAIL\r\n' | docker run --rm -i --network "$network" alpine:3.2
 fi
 
 echo "External TLS proxy trust and hostname verification qualified"
+
+
+# Full Dancer IRC protocol qualification through the verified TLS proxy.
+docker rm -f dancer-tls-client dancer-tls-proxy dancer-tls-server >/dev/null 2>&1 || true
+docker run -d --name dancer-tls-server --network "$network" --network-alias irc-tls-ci \
+  -v "$work:/tls:ro" -v "$PWD/tests/irc:/irc:ro" alpine:3.22 sh -c \
+  "apk add --no-cache openssl python3 >/dev/null && openssl s_server -accept 6697 -cert /tls/server.crt -key /tls/server.key -quiet -naccept 2 -exec 'python3 /irc/server.py'" >/dev/null
+docker run -d --name dancer-tls-proxy --network "$network" \
+  -v "$work:/tls:ro" alpine:3.22 sh -c \
+  "apk add --no-cache stunnel ca-certificates >/dev/null && stunnel /tls/stunnel.conf" >/dev/null
+
+config_dir="$work/dancer"
+mkdir -p "$config_dir"
+cid=$(docker create dancer:tls-ci)
+docker cp "$cid:/usr/local/share/dancer/." "$config_dir/"
+docker rm "$cid" >/dev/null
+awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = dancer-tls-proxy:6667"; done=1 } {print}' "$config_dir/dancer.config" > "$config_dir/dancer.config.new"
+mv "$config_dir/dancer.config.new" "$config_dir/dancer.config"
+sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' "$config_dir/dancer.config"
+sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' "$config_dir/dancer.config"
+sudo chown -R 10001:10001 "$config_dir"
+
+docker run -d --name dancer-tls-client --restart on-failure --network "$network" -v "$config_dir:/data" dancer:tls-ci >/dev/null
+for _ in $(seq 1 45); do
+  logs=$(docker logs dancer-tls-server 2>&1 || true)
+  printf '%s\n' "$logs" | grep -q 'DANCER_IRC_RECONNECT_OK' && break
+  sleep 1
+done
+logs=$(docker logs dancer-tls-server 2>&1 || true)
+printf '%s\n' "$logs"
+printf '%s\n' "$logs" | grep -q 'DANCER_IRC_HANDSHAKE_OK'
+printf '%s\n' "$logs" | grep -q 'DANCER_IRC_PING_PONG_OK'
+printf '%s\n' "$logs" | grep -q 'DANCER_IRC_CHANNEL_OK'
+printf '%s\n' "$logs" | grep -q 'DANCER_IRC_RECONNECT_OK'
+echo "Dancer registration, PING/PONG, JOIN, and recovery qualified through TLS proxy"
