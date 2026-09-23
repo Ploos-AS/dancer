@@ -9,6 +9,8 @@ version.
 
 ## Unreleased
 
+## v0.3.0 — 2026-09-23
+
 ### Added
 - CI qualification against Ergo, InspIRCd, and Solanum.
 - External TLS transport qualification including CA trust, hostname verification,
