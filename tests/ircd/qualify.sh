@@ -85,4 +85,39 @@ done
 test "$(docker inspect "$client" --format '{{.State.Running}}')" = true
 test "$registered" -eq 1
 test "$joined" -eq 1
-echo "Dancer registration and channel behavior qualified against $target"
+
+# Dancer 4.16 exits when its IRC connection disappears. Recovery is deliberately
+# provided by the container restart policy rather than by patching upstream.
+docker update --restart unless-stopped "$client" >/dev/null
+before=$(docker inspect "$client" --format '{{.RestartCount}}')
+docker stop "$server" >/dev/null
+stopped=0
+for _ in $(seq 1 30); do
+  if [ "$(docker inspect "$client" --format '{{.State.Running}}')" != true ]; then stopped=1; break; fi
+  sleep 1
+done
+# A restart policy may restart quickly enough that the stopped state is missed.
+# In that case the restart counter itself is authoritative.
+after=$(docker inspect "$client" --format '{{.RestartCount}}')
+if [ "$stopped" -ne 1 ] && [ "$after" -le "$before" ]; then
+  echo "Dancer did not exit/restart after IRCd disconnect" >&2
+  exit 1
+fi
+
+docker start "$server" >/dev/null
+for _ in $(seq 1 30); do
+  if docker run --rm --network "$network" alpine:3.22 sh -c "nc -z $server 6667" >/dev/null 2>&1; then break; fi
+  sleep 1
+done
+
+recovered=0
+for _ in $(seq 1 45); do
+  restarts=$(docker inspect "$client" --format '{{.RestartCount}}')
+  if [ "$restarts" -gt "$before" ] && [ "$(docker inspect "$client" --format '{{.State.Running}}')" = true ]; then
+    recovered=1
+    break
+  fi
+  sleep 1
+done
+test "$recovered" -eq 1
+echo "Dancer registration, channel behavior, disconnect and container recovery qualified against $target"
