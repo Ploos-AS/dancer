@@ -19,17 +19,20 @@ apply_line_file() {
   [ -r "$file" ] || { echo "dancer-config-overlay: unreadable overlay: $file" >&2; exit 66; }
   line=$(sed -n '1p' "$file")
   [ -n "$line" ] || { echo "dancer-config-overlay: empty overlay: $file" >&2; exit 65; }
-  key=$(printf '%s\n' "$line" | awk '{print $1}')
-  [ -n "$key" ] || { echo "dancer-config-overlay: overlay has no directive key" >&2; exit 65; }
-  matches=$(printf '%s\n' "$current" | awk -v key="$key" '
-    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
-    { line=$0; sub(/^[[:space:]]+/, "", line); split(line, f, /[[:space:]]+/); k=f[1]; sub(/[:=]$/, "", k); if (k==key) n++ }
-    END { print n+0 }
-  ')
+  key=$(printf '%s\n' "$line" | sed -n -E 's/^[[:space:]]*#?([[:alnum:]_]+)[[:space:]]*=.*/\1/p')
+  [ -n "$key" ] || { echo "dancer-config-overlay: overlay must be a complete Dancer key = value line" >&2; exit 65; }
+  matches=$(printf '%s\n' "$current" | grep -E -c "^[[:space:]]*#?${key}[[:space:]]*=" || true)
   [ "$matches" -eq 1 ] || { echo "dancer-config-overlay: directive '$key' matched $matches lines; refusing" >&2; exit 65; }
   printf '%s\n' "$current" | awk -v key="$key" -v replacement="$line" '
-    /^[[:space:]]*#/ || /^[[:space:]]*$/ { print; next }
-    { raw=$0; line=$0; sub(/^[[:space:]]+/, "", line); split(line, f, /[[:space:]]+/); k=f[1]; sub(/[:=]$/, "", k); if (k==key) {print replacement; next} print raw }
+    {
+      raw=$0
+      line=$0
+      sub(/^[[:space:]]*/, "", line)
+      sub(/^#/, "", line)
+      split(line, f, /[[:space:]]*=[[:space:]]*/)
+      if (f[1] == key) { print replacement; next }
+      print raw
+    }
   '
 }
 
