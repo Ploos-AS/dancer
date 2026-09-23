@@ -69,6 +69,12 @@ case "$target" in
 esac
 
 for _ in $(seq 1 30); do
+  if [ "$(docker inspect "$server" --format '{{.State.Running}}' 2>/dev/null || true)" != true ]; then
+    echo "IRCd container $server exited before becoming ready" >&2
+    docker logs "$server" >&2 || true
+    docker inspect "$server" --format 'exit={{.State.ExitCode}} error={{.State.Error}}' >&2 || true
+    exit 1
+  fi
   if docker run --rm --network "$network" alpine:3.22 sh -c "nc -z $server 6667"; then break; fi
   sleep 1
 done
