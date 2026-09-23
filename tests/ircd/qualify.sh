@@ -86,8 +86,8 @@ docker run -d --name "$client" --network "$network" \
 registered=0
 joined=0
 for _ in $(seq 1 30); do
-  if docker exec "$client" sh -c 'grep -Eiq "(001|Welcome)" /data/logfile /data/dancer.serv 2>/dev/null'; then registered=1; fi
-  if docker exec "$client" sh -c 'grep -Eiq "(JOIN|joined|#dancer-ci)" /data/logfile /data/dancer.serv 2>/dev/null'; then joined=1; fi
+  if docker exec "$client" sh -c 'grep -Eiq "Connected to .* on port 6667" /data/logfile 2>/dev/null'; then registered=1; fi
+  if docker exec "$client" sh -c 'grep -Eiq "Join[[:space:]]+@?dancer-ci|#dancer-ci" /data/logfile 2>/dev/null'; then joined=1; fi
   [ "$registered" -eq 1 ] && [ "$joined" -eq 1 ] && break
   sleep 1
 done
@@ -102,8 +102,14 @@ for x in "$config_dir/logfile" "$config_dir/dancer.serv"; do
 done
 
 test "$(docker inspect "$client" --format '{{.State.Running}}')" = true
-test "$registered" -eq 1
-test "$joined" -eq 1
+if [ "$registered" -ne 1 ]; then
+  echo "Dancer did not record a successful IRC connection" >&2
+  exit 1
+fi
+if [ "$joined" -ne 1 ]; then
+  echo "Dancer did not record joining #dancer-ci" >&2
+  exit 1
+fi
 
 # Dancer 4.16 exits when its IRC connection disappears. Recovery is deliberately
 # provided by the container restart policy rather than by patching upstream.
