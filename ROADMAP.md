@@ -42,7 +42,7 @@
 
 - [x] Document and CI-enforce the no-fork boundary and inventory every upstream compatibility patch.
 - [x] Add secrets/config overlays without storing IRC credentials in Git: opt-in Compose secret mount, syntax-preserving runtime generation, restrictive permissions, CI qualification, and local secret ignore rules.
-- [ ] Add external configuration generation and syntax-aware validation based on documented upstream Dancer 4.16 semantics.
+- [x] Add external configuration generation and syntax-aware validation based on documented upstream Dancer 4.16 semantics: pinned-reference generator, syntax-preserving overlays, conservative validator, runtime preflight, CI negative tests, and OCI tooling.
 - [ ] Add connection-aware readiness distinct from the process healthcheck.
 - [ ] Add external observability/Prometheus metrics for uptime, IRC connection state, reconnects, and channel state without modifying Dancer feature code.
 - [ ] Qualify Dancer against a matrix of modern IRC daemons in isolated CI.
