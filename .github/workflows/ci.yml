@@ -359,167 +359,23 @@ jobs:
           esac
 
 
-  ircd-ergo:
+  ircd-matrix:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ircd: [ergo, inspircd, solanum]
     steps:
       - uses: actions/checkout@v4
       - name: Build Dancer
         run: docker build --progress=plain -t dancer:ircd-matrix .
-      - name: Qualify Dancer against Ergo
+      - name: Build Solanum CI image
+        if: matrix.ircd == 'solanum'
+        run: docker build --progress=plain -f tests/ircd/solanum.Dockerfile -t solanum:dancer-ci .
+      - name: Qualify Dancer against ${{ matrix.ircd }}
         run: |
-          set -e
-          network=dancer-ergo-ci
-          cleanup() {
-            docker rm -f dancer-ergo ergo-ci >/dev/null 2>&1 || true
-            docker network rm "$network" >/dev/null 2>&1 || true
-            rm -rf tests/ircd-ergo
-          }
-          trap cleanup EXIT
-          docker network create "$network"
-          mkdir -p tests/ircd-ergo
-          cid=$(docker create dancer:ircd-matrix)
-          docker cp "$cid:/usr/local/share/dancer/." tests/ircd-ergo/
-          docker rm "$cid" >/dev/null
-          awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = ergo-ci:6667"; done=1 } {print}' tests/ircd-ergo/dancer.config > tests/ircd-ergo/dancer.config.new
-          mv tests/ircd-ergo/dancer.config.new tests/ircd-ergo/dancer.config
-          sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' tests/ircd-ergo/dancer.config
-          sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' tests/ircd-ergo/dancer.config
-          sudo chown -R 10001:10001 tests/ircd-ergo
-          docker run -d --init --name ergo-ci --network "$network" ghcr.io/ergochat/ergo:stable
-          for _ in $(seq 1 30); do
-            if docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z ergo-ci 6667'; then break; fi
-            sleep 1
-          done
-          docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z ergo-ci 6667'
-          docker run -d --name dancer-ergo --network "$network" -v "$PWD/tests/ircd-ergo:/data" dancer:ircd-matrix
-          registered=0
-          joined=0
-          for _ in $(seq 1 30); do
-            logs=$(docker logs dancer-ergo 2>&1 || true)
-            printf '%s\n' "$logs"
-            if printf '%s\n' "$logs" | grep -Eq '(^|[^0-9])001([^0-9]|$)|Welcome'; then registered=1; fi
-            if docker exec dancer-ergo sh -c 'grep -Eiq "(JOIN|joined|#dancer-ci)" /data/logfile /data/dancer.serv 2>/dev/null'; then joined=1; fi
-            [ "$registered" -eq 1 ] && [ "$joined" -eq 1 ] && break
-            sleep 1
-          done
-          echo "=== Ergo logs ==="
-          docker logs ergo-ci || true
-          echo "=== Dancer logs ==="
-          docker logs dancer-ergo || true
-          echo "=== Dancer runtime files ==="
-          for x in tests/ircd-ergo/logfile tests/ircd-ergo/dancer.serv; do [ ! -f "$x" ] || { echo "--- $x"; cat "$x"; }; done
-          test "$(docker inspect dancer-ergo --format '{{.State.Running}}')" = true
-          test "$registered" -eq 1
-          test "$joined" -eq 1
-          echo "Dancer registration and channel behavior qualified against Ergo"
-
-
-  ircd-inspircd:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Dancer
-        run: docker build --progress=plain -t dancer:ircd-matrix .
-      - name: Qualify Dancer against InspIRCd
-        run: |
-          set -e
-          network=dancer-inspircd-ci
-          cleanup() {
-            docker rm -f dancer-inspircd inspircd-ci >/dev/null 2>&1 || true
-            docker network rm "$network" >/dev/null 2>&1 || true
-            rm -rf tests/ircd-inspircd
-          }
-          trap cleanup EXIT
-          docker network create "$network"
-          mkdir -p tests/ircd-inspircd
-          cid=$(docker create dancer:ircd-matrix)
-          docker cp "$cid:/usr/local/share/dancer/." tests/ircd-inspircd/
-          docker rm "$cid" >/dev/null
-          awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = inspircd-ci:6667"; done=1 } {print}' tests/ircd-inspircd/dancer.config > tests/ircd-inspircd/dancer.config.new
-          mv tests/ircd-inspircd/dancer.config.new tests/ircd-inspircd/dancer.config
-          sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' tests/ircd-inspircd/dancer.config
-          sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' tests/ircd-inspircd/dancer.config
-          sudo chown -R 10001:10001 tests/ircd-inspircd
-          docker run -d --name inspircd-ci --network "$network" -e INSP_ENABLE_DNSBL=no inspircd/inspircd-docker:4.8.0
-          for _ in $(seq 1 30); do
-            if docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z inspircd-ci 6667'; then break; fi
-            sleep 1
-          done
-          docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z inspircd-ci 6667'
-          docker run -d --name dancer-inspircd --network "$network" -v "$PWD/tests/ircd-inspircd:/data" dancer:ircd-matrix
-          registered=0
-          joined=0
-          for _ in $(seq 1 30); do
-            if docker exec dancer-inspircd sh -c 'grep -Eiq "(001|Welcome)" /data/logfile /data/dancer.serv 2>/dev/null'; then registered=1; fi
-            if docker exec dancer-inspircd sh -c 'grep -Eiq "(JOIN|joined|#dancer-ci)" /data/logfile /data/dancer.serv 2>/dev/null'; then joined=1; fi
-            [ "$registered" -eq 1 ] && [ "$joined" -eq 1 ] && break
-            sleep 1
-          done
-          echo "=== InspIRCd logs ==="
-          docker logs inspircd-ci || true
-          echo "=== Dancer logs ==="
-          docker logs dancer-inspircd || true
-          echo "=== Dancer runtime files ==="
-          for x in tests/ircd-inspircd/logfile tests/ircd-inspircd/dancer.serv; do [ ! -f "$x" ] || { echo "--- $x"; cat "$x"; }; done
-          test "$(docker inspect dancer-inspircd --format '{{.State.Running}}')" = true
-          test "$registered" -eq 1
-          test "$joined" -eq 1
-          echo "Dancer registration and channel behavior qualified against InspIRCd"
-
-
-  ircd-solanum:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build Dancer and Solanum
-        run: |
-          docker build --progress=plain -t dancer:ircd-matrix .
-          docker build --progress=plain -f tests/ircd/solanum.Dockerfile -t solanum:dancer-ci .
-      - name: Qualify Dancer against Solanum
-        run: |
-          set -e
-          network=dancer-solanum-ci
-          cleanup() {
-            docker rm -f dancer-solanum solanum-ci >/dev/null 2>&1 || true
-            docker network rm "$network" >/dev/null 2>&1 || true
-            rm -rf tests/ircd-solanum
-          }
-          trap cleanup EXIT
-          docker network create "$network"
-          mkdir -p tests/ircd-solanum
-          cid=$(docker create dancer:ircd-matrix)
-          docker cp "$cid:/usr/local/share/dancer/." tests/ircd-solanum/
-          docker rm "$cid" >/dev/null
-          awk 'BEGIN{done=0} !done && $0 ~ /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { $0="server = solanum-ci:6667"; done=1 } {print}' tests/ircd-solanum/dancer.config > tests/ircd-solanum/dancer.config.new
-          mv tests/ircd-solanum/dancer.config.new tests/ircd-solanum/dancer.config
-          sed -i -E 's|^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*$|channel = #dancer-ci|' tests/ircd-solanum/dancer.config
-          sed -i -E 's|^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*$|nick = dancer-ci|' tests/ircd-solanum/dancer.config
-          sudo chown -R 10001:10001 tests/ircd-solanum
-          docker run -d --name solanum-ci --network "$network" solanum:dancer-ci
-          for _ in $(seq 1 30); do
-            if docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z solanum-ci 6667'; then break; fi
-            sleep 1
-          done
-          docker run --rm --network "$network" alpine:3.22 sh -c 'nc -z solanum-ci 6667'
-          docker run -d --name dancer-solanum --network "$network" -v "$PWD/tests/ircd-solanum:/data" dancer:ircd-matrix
-          registered=0
-          joined=0
-          for _ in $(seq 1 30); do
-            if docker exec dancer-solanum sh -c 'grep -Eiq "(001|Welcome)" /data/logfile /data/dancer.serv 2>/dev/null'; then registered=1; fi
-            if docker exec dancer-solanum sh -c 'grep -Eiq "(JOIN|joined|#dancer-ci)" /data/logfile /data/dancer.serv 2>/dev/null'; then joined=1; fi
-            [ "$registered" -eq 1 ] && [ "$joined" -eq 1 ] && break
-            sleep 1
-          done
-          echo "=== Solanum logs ==="
-          docker logs solanum-ci || true
-          echo "=== Dancer logs ==="
-          docker logs dancer-solanum || true
-          echo "=== Dancer runtime files ==="
-          for x in tests/ircd-solanum/logfile tests/ircd-solanum/dancer.serv; do [ ! -f "$x" ] || { echo "--- $x"; cat "$x"; }; done
-          test "$(docker inspect dancer-solanum --format '{{.State.Running}}')" = true
-          test "$registered" -eq 1
-          test "$joined" -eq 1
-          echo "Dancer registration and channel behavior qualified against Solanum"
+          chmod +x tests/ircd/qualify.sh
+          tests/ircd/qualify.sh "${{ matrix.ircd }}"
 
   multiarch:
     runs-on: ubuntu-latest
