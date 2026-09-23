@@ -6,7 +6,7 @@ network=dancer-tls-ci
 cleanup() {
   docker rm -f dancer-tls-client dancer-tls-proxy dancer-tls-server >/dev/null 2>&1 || true
   docker network rm "$network" >/dev/null 2>&1 || true
-  rm -rf "$work"
+  sudo rm -rf "$work"
 }
 trap cleanup EXIT HUP INT TERM
 mkdir -p "$work"
