@@ -16,7 +16,7 @@ grep -q '^dancer_irc_channel_up 1$' "$work/direct.prom"
 grep -q '^dancer_irc_reconnects_total 3$' "$work/direct.prom"
 grep -Eq '^dancer_observer_uptime_seconds [0-9]+$' "$work/direct.prom"
 
-DANCER_READY_STATE_FILE="$work/state/ready" DANCER_METRICS_FILE="$work/metrics/dancer.prom" DANCER_METRICS_INTERVAL=1 timeout 3 deploy/readiness/metrics.sh || status=$?
+PATH="$PWD/tools:$PATH" DANCER_READY_STATE_FILE="$work/state/ready" DANCER_METRICS_FILE="$work/metrics/dancer.prom" DANCER_METRICS_INTERVAL=1 timeout 3 deploy/readiness/metrics.sh || status=$?
 status=${status:-0}
 [ "$status" -eq 0 ] || [ "$status" -eq 124 ]
 test -s "$work/metrics/dancer.prom"
