@@ -1,6 +1,6 @@
 FROM debian:13-slim AS builder
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates git build-essential pkg-config meson ninja-build libsqlite3-dev flex bison libssl-dev \
+ && apt-get install -y --no-install-recommends ca-certificates git build-essential libltdl-dev pkg-config meson ninja-build libsqlite3-dev flex bison libssl-dev \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 ARG SOLANUM_REF=main
