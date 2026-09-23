@@ -95,6 +95,16 @@ for _ in $(seq 1 45); do
 done
 logs=$(docker logs dancer-tls-server 2>&1 || true)
 printf '%s\n' "$logs"
+if ! printf '%s\n' "$logs" | grep -q 'DANCER_IRC_RECONNECT_OK'; then
+  echo "TLS protocol qualification timed out" >&2
+  echo "=== TLS proxy logs ===" >&2
+  docker logs dancer-tls-proxy >&2 || true
+  echo "=== Dancer logs ===" >&2
+  docker logs dancer-tls-client >&2 || true
+  echo "=== Dancer runtime logfile ===" >&2
+  cat "$config_dir/logfile" >&2 2>/dev/null || true
+  exit 1
+fi
 printf '%s\n' "$logs" | grep -q 'DANCER_IRC_HANDSHAKE_OK'
 printf '%s\n' "$logs" | grep -q 'DANCER_IRC_PING_PONG_OK'
 printf '%s\n' "$logs" | grep -q 'DANCER_IRC_CHANNEL_OK'
