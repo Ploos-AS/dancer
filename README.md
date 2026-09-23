@@ -12,7 +12,7 @@ OCI packaging for the legacy **Dancer IRC bot**.
 - External configuration under `/data`.
 - Docker/Podman Compose example.
 - CI build, startup/shutdown, Compose-contract, and isolated IRC registration smoke tests.
-- Qualified multi-arch builds for amd64 and arm64.
+- Qualified multi-arch builds for amd64, arm64, arm/v7, and 386.
 - Upstream source and license qualification before a release is published.
 
 ## Base image policy
@@ -43,7 +43,7 @@ The runtime is unprivileged and contains no compiler toolchain. The Compose exam
 
 ## Architectures
 
-M0 CI validates the native build. Release publishing is prepared for `linux/amd64` and `linux/arm64`; arm/v7 and 386 can be added after qualification.
+CI and release publishing qualify `linux/amd64`, `linux/arm64`, `linux/arm/v7`, and `linux/386`.
 
 ## Upstream
 
