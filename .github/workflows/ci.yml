@@ -381,6 +381,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Build Dancer for TLS qualification
+        run: docker build --progress=plain -t dancer:tls-ci .
       - name: Qualify external TLS transport
         run: |
           chmod +x tests/tls/qualify.sh
