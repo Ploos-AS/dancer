@@ -2,7 +2,7 @@
 set -eu
 
 work=${RUNNER_TEMP:-/tmp}/dancer-overlay-$$
-cleanup() { rm -rf "$work"; }
+cleanup() { sudo rm -rf "$work" 2>/dev/null || rm -rf "$work"; }
 trap cleanup EXIT HUP INT TERM
 mkdir -p "$work"
 
@@ -52,6 +52,7 @@ sudo chown -R 10001:10001 "$work/runtime"
 status=0
 docker run --name dancer-overlay-e2e \
   -v "$work/runtime:/data:ro" \
+  -v "$work/dancer.config:/usr/local/share/dancer/dancer.config:ro" \
   -v "$work/container-overlay:/run/secrets/dancer-config-line:ro" \
   -e DANCER_CONFIG_OVERLAY_FILE=/run/secrets/dancer-config-line \
   dancer:config-ci >/tmp/dancer-overlay-e2e.log 2>&1 || status=$?
