@@ -18,4 +18,12 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    environment:
+      DANCER_CONFIG_OVERLAY_FILE: ${DANCER_CONFIG_OVERLAY_FILE:-}
+    secrets:
+      - dancer_config_overlay
+
+secrets:
+  dancer_config_overlay:
+    file: ${DANCER_CONFIG_OVERLAY_SOURCE:-./secrets/dancer-config-line}
 
