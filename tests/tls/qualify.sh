@@ -71,7 +71,7 @@ echo "External TLS proxy trust and hostname verification qualified"
 docker rm -f dancer-tls-client dancer-tls-proxy dancer-tls-server >/dev/null 2>&1 || true
 docker run -d --name dancer-tls-server --network "$network" --network-alias irc-tls-ci \
   -v "$work:/tls:ro" -v "$PWD/tests/irc:/irc:ro" alpine:3.22 sh -c \
-  "apk add --no-cache openssl socat python3 >/dev/null && socat TCP-LISTEN:6667,reuseaddr,fork EXEC:'python3 /irc/server.py'" >/dev/null
+  "apk add --no-cache python3 >/dev/null && python3 /irc/server.py" >/dev/null
 
 cat > "$work/stunnel-server.conf" <<'EOF'
 foreground = yes
