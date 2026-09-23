@@ -9,6 +9,19 @@ version.
 
 ## Unreleased
 
+### Added
+- CI qualification against Ergo, InspIRCd, and Solanum.
+- External TLS transport qualification including CA trust, hostname verification,
+  IRC registration, PING/PONG, channel join, and reconnect recovery.
+- Readiness observer and Prometheus deployment qualification.
+
+### Changed
+- GitHub Actions used by CI and release publishing updated to current Node 24-compatible major releases.
+- Release gate now explicitly requires pinned upstream checksum, GPL license marker,
+  and documented compatibility-edit verification.
+- Architecture documentation aligned with the qualified amd64, arm64, arm/v7,
+  and 386 release matrix.
+
 ## v0.2.0 — 2026-09-23
 
 ### Added
