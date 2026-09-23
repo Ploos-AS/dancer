@@ -43,9 +43,9 @@ docker cp "$cid:/usr/local/share/dancer/." "$config_dir/"
 docker rm "$cid" >/dev/null
 
 awk -v server="$server" '
-  /^[[:space:]]*server[[:space:]]*=/ { sub(/=.*/, "= " server ":6667") }
-  /^[[:space:]]*channel[[:space:]]*=/ { sub(/=.*/, "= #dancer-ci") }
-  /^[[:space:]]*nick[[:space:]]*=/ { sub(/=.*/, "= dancer-ci") }
+  /^[[:space:]]*#?[[:space:]]*server[[:space:]]*=/ { sub(/^[[:space:]]*#?[[:space:]]*server[[:space:]]*=.*/, "server = " server ":6667") }
+  /^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=/ { sub(/^[[:space:]]*#?[[:space:]]*channel[[:space:]]*=.*/, "channel = #dancer-ci") }
+  /^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=/ { sub(/^[[:space:]]*#?[[:space:]]*nick[[:space:]]*=.*/, "nick = dancer-ci") }
   { print }
 ' "$config_dir/dancer.config" > "$config_dir/dancer.config.new"
 mv "$config_dir/dancer.config.new" "$config_dir/dancer.config"
@@ -73,6 +73,7 @@ docker run --rm --network "$network" \
 
 docker run -d --name "$client" --network "$network" \
   -v "$PWD/$config_dir:/data" \
+  -e DANCER_CONFIG_REFERENCE=/data/dancer.config \
   "$image" >/dev/null
 registered=0
 joined=0
