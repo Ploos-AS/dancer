@@ -5,7 +5,7 @@ host=sys.argv[1]
 port=int(sys.argv[2]) if len(sys.argv)>2 else 6667
 nick=os.environ.get("IRCD_PROBE_NICK","dancer-probe")
 channel=os.environ.get("IRCD_PROBE_CHANNEL","#dancer-ci")
-deadline=time.time()+15
+deadline=time.time()+int(os.environ.get("IRCD_PROBE_TIMEOUT","15"))
 s=socket.create_connection((host,port),timeout=5)
 s.settimeout(1)
 s.sendall(f"NICK {nick}\r\nUSER {nick} 0 * :Dancer CI probe\r\n".encode())
