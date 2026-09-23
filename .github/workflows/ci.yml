@@ -85,7 +85,10 @@ jobs:
           docker network create dancer-m0-test
           trap 'docker rm -f irc-test dancer-m0-test-client >/dev/null 2>&1 || true; docker network rm dancer-m0-test >/dev/null 2>&1 || true' EXIT
           docker run -d --name irc-test --network dancer-m0-test -v "$PWD/tests/irc/server.py:/server.py:ro" python:3-alpine python3 /server.py
-          docker run -d --name dancer-m0-test-client --restart unless-stopped --network dancer-m0-test -v "$PWD/tests/irc/config:/data" dancer:m0
+          docker run -d --name dancer-m0-test-client --restart unless-stopped --network dancer-m0-test \
+            -v "$PWD/tests/irc/config:/data" \
+            -e DANCER_CONFIG_REFERENCE=/data/dancer.config \
+            dancer:m0
           ok=0
           for _ in $(seq 1 20); do
             if docker logs irc-test 2>&1 | grep -q 'DANCER_IRC_RECONNECT_OK'; then ok=1; break; fi
