@@ -1,0 +1,37 @@
+services:
+  dancer:
+    image: ${DANCER_IMAGE:-ghcr.io/ploos-as/dancer:0.2}
+    restart: unless-stopped
+    user: "10001:10001"
+    init: true
+    volumes:
+      - ./config:/data
+      - dancer-state:/run/dancer
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  readiness:
+    image: ${DANCER_IMAGE:-ghcr.io/ploos-as/dancer:0.2}
+    user: "10001:10001"
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        while :; do
+          dancer-readiness && echo ready || echo not-ready
+          sleep 30
+        done
+    volumes:
+      - dancer-state:/run/dancer:ro
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  dancer-state:
