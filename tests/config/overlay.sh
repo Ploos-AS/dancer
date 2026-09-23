@@ -10,28 +10,14 @@ cid=$(docker create dancer:config-ci)
 docker cp "$cid:/usr/local/share/dancer/dancer.config" "$work/dancer.config"
 docker rm "$cid" >/dev/null
 
-echo "Pinned upstream dancer.config diagnostic:" >&2
-sed -n '1,40p' "$work/dancer.config" >&2
-echo "----" >&2
-
-# Select a real, active upstream directive whose first token is unique.
-line=$(awk '
-  /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
-  { line=$0; sub(/^[[:space:]]+/, "", line); split(line, f, /[[:space:]]+/); key=f[1]; sub(/[:=]$/, "", key); count[key]++; sample[key]=$0 }
-  END { for (key in count) if (count[key] == 1) { print sample[key]; exit } }
-' "$work/dancer.config")
-if [ -z "$line" ]; then
-  line=$(awk '
-    /^[[:space:]]*[#;]/ || /^[[:space:]]*$/ { next }
-    { print; exit }
-  ' "$work/dancer.config")
-fi
+# Select a real directive from Dancer's commented upstream template.
+line=$(grep -m1 -E '^[[:space:]]*#[[:alnum:]_]+[[:space:]]*=' "$work/dancer.config" || true)
 [ -n "$line" ] || {
-  echo "No active directive found in pinned upstream dancer.config" >&2
+  echo "No template directive found in pinned upstream dancer.config" >&2
   exit 1
 }
-key=$(printf '%s\n' "$line" | awk '{k=$1; sub(/[:=]$/, "", k); print k}')
-replacement="$key DANCER_CI_OVERLAY_VALUE"
+key=$(printf '%s\n' "$line" | sed -n -E 's/^[[:space:]]*#([[:alnum:]_]+)[[:space:]]*=.*/\1/p')
+replacement="$key = DANCER_CI_OVERLAY_VALUE"
 printf '%s\n' "$replacement" > "$work/secret-line"
 
 out=$(DANCER_CONFIG_OVERLAY_FILE="$work/secret-line" tools/dancer-config-overlay "$work/dancer.config" "$work/generated.conf")
