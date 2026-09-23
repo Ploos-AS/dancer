@@ -15,8 +15,8 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --system --uid 10002 --home /var/lib/solanum --create-home solanum
 COPY --from=builder /opt/solanum /opt/solanum
-RUN mkdir -p /var/lib/solanum/etc /var/lib/solanum/logs \
- && chown -R solanum:solanum /var/lib/solanum
+RUN mkdir -p /var/lib/solanum/etc /var/lib/solanum/logs /opt/solanum/logs /opt/solanum/var \
+ && chown -R solanum:solanum /var/lib/solanum /opt/solanum/logs /opt/solanum/var
 COPY --chown=solanum:solanum tests/ircd/solanum.conf /var/lib/solanum/etc/ircd.conf
 USER solanum
 WORKDIR /var/lib/solanum
