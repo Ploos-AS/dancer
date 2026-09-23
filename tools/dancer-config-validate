@@ -1,0 +1,46 @@
+#!/bin/sh
+set -eu
+
+config=${1:-/data/dancer.config}
+reference=${DANCER_CONFIG_REFERENCE:-/usr/local/share/dancer/dancer.config}
+
+fail() { echo "dancer-config-validate: $*" >&2; exit 65; }
+[ -r "$config" ] || fail "unreadable config: $config"
+[ -r "$reference" ] || fail "unreadable pinned upstream reference: $reference"
+
+# Validation is intentionally grammar-conservative. It derives accepted
+# directive prefixes from the pinned upstream Dancer 4.16 example instead of
+# inventing a new schema for the legacy application.
+prefixes() {
+  sed -n -E '
+    /^[[:space:]]*#/d
+    /^[[:space:]]*$/d
+    /[:=]/ {
+      s/[[:space:]]+$//
+      s/^([[:space:]]*[^:=]+[:=]).*$/\1/
+      p
+    }
+  ' "$1" | sort -u
+}
+
+ref_keys=$(mktemp)
+cfg_keys=$(mktemp)
+trap 'rm -f "$ref_keys" "$cfg_keys"' EXIT HUP INT TERM
+prefixes "$reference" > "$ref_keys"
+prefixes "$config" > "$cfg_keys"
+
+[ -s "$ref_keys" ] || fail "reference exposes no recognizable directive prefixes"
+
+unknown=$(comm -13 "$ref_keys" "$cfg_keys" || true)
+[ -z "$unknown" ] || {
+  echo "dancer-config-validate: directives absent from pinned upstream example:" >&2
+  printf '%s\n' "$unknown" >&2
+  exit 65
+}
+
+# Reject NUL bytes and CRLF contamination in operator-managed text config.
+if LC_ALL=C grep -q "$(printf '\r')" "$config"; then
+  fail "CR characters are not accepted"
+fi
+
+echo "Dancer config is structurally compatible with pinned upstream example"
