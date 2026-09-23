@@ -68,7 +68,6 @@ docker run --rm --network "$network" \
 
 docker run -d --name "$client" --network "$network" \
   -v "$PWD/$config_dir:/data" \
-  -v "$PWD/$config_dir/dancer.config:/usr/local/share/dancer/dancer.config:ro" \
   "$image" >/dev/null
 registered=0
 joined=0
