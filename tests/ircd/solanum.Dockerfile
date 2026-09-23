@@ -11,7 +11,7 @@ RUN meson setup build --optimization 2 --prefix=/opt/solanum -Dopenssl=enabled \
 
 FROM debian:13-slim
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates libsqlite3-0 libssl3 \
+ && apt-get install -y --no-install-recommends ca-certificates libltdl7 libsqlite3-0 libssl3 \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --system --uid 10002 --home /var/lib/solanum --create-home solanum
 COPY --from=builder /opt/solanum /opt/solanum
